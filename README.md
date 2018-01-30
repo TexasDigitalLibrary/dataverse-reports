@@ -51,6 +51,9 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+NOTE: In some Linux environments pip will not install the underlying requirements for psycopg2 and PyYAML. If you see errors related to these packages at runtime, then run `easy_install psycopg2` and `easy_install PyYAML`.
+
+
 Usage
 -----
 
