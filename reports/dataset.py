@@ -30,6 +30,13 @@ class DatasetReports(object):
 
         self.config = config
 
+        # API and database fields used in reports
+        root_fieldnames = ['dataverse', 'id', 'identifier', 'persistentUrl', 'protocol', 'authority', 'publisher', 'publicationDate']
+        latest_fieldnames = ['versionState', 'lastUpdateTime', 'releaseTime', 'createTime', 'license', 'termsOfUse']
+        metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription', 'notesText', 'subject', 'productionDate', 'productionPlace', 'depositor', 'dateOfDeposit']
+        database_fieldnames = ['downloadCount']
+        self.fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames
+
         self.logger = logging.getLogger('dataverse-reports')
 
     def generate_reports(self, type='all'):
@@ -49,12 +56,6 @@ class DatasetReports(object):
         datasets = []
         report_file_paths = []
 
-        # API fields used in reports
-        fieldnames = ['dataverse', 'id', 'identifier', 'persistentUrl', 'protocol', 'authority', 'publisher', 'publicationDate']
-        latest_fieldnames = ['versionState', 'lastUpdateTime', 'releaseTime', 'createTime', 'license', 'termsOfUse']
-        metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription', 'notesText', 'subject', 'productionDate', 'productionPlace', 'depositor', 'dateOfDeposit']
-        all_fieldnames = fieldnames + latest_fieldnames + metadata_fieldnames
-
         for key in self.config['accounts']:
             account_info = self.config['accounts'][key]
             self.logger.info("Generating dataset report for %s.", account_info['identifier'])
@@ -63,7 +64,7 @@ class DatasetReports(object):
             if len(datasets) > 0:
                 # Write results to CSV file
                 output_file = account_info['identifier'] + '-datasets.csv'
-                self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=all_fieldnames, data=datasets)
+                self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=self.fieldnames, data=datasets)
 
                 # Add file to reports list
                 report_file_paths.append(self.config['work_dir'] + output_file)
@@ -79,13 +80,6 @@ class DatasetReports(object):
         # List of Datasets
         datasets = []
 
-        # API fields used in reports
-        fieldnames = ['dataverse', 'id', 'identifier', 'persistentUrl', 'protocol', 'authority', 'publisher', 'publicationDate']
-        latest_fieldnames = ['versionState', 'lastUpdateTime', 'releaseTime', 'createTime', 'license', 'termsOfUse']
-        metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription', 'notesText', 'subject', 'productionDate', 'productionPlace', 'depositor', 'dateOfDeposit']
-        database_fieldnames = ['downloadCount']
-        all_fieldnames = fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames
-
         self.logger.info("Begin loading datasets for %s.", account_info['identifier'])
         self.load_datasets_recursive(datasets, account_info['identifier'])
         self.logger.info("Finished loading %s datasets for %s", str(len(datasets)), account_info['identifier'])
@@ -93,7 +87,7 @@ class DatasetReports(object):
         if len(datasets) > 0:
             # Write results to CSV file
             output_file = account_info['identifier'] + '-datasets.csv'
-            self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=all_fieldnames, data=datasets)
+            self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=self.fieldnames, data=datasets)
 
             # Send results to contacts list
             self.email_report_institution(report_file_paths=[self.config['work_dir'] + output_file], account_info=account_info)

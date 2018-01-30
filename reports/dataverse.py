@@ -26,6 +26,11 @@ class DataverseReports(object):
 
         self.config = config
 
+        # API fields used in reports
+        root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
+        creator_fieldnames = ['creatorIdentifier', 'creatorName', 'creatorEmail', 'creatorAffiliation', 'creatorPosition']
+        self.fieldnames = root_fieldnames + creator_fieldnames
+
         self.logger = logging.getLogger('dataverse-reports')
 
 
@@ -46,11 +51,6 @@ class DataverseReports(object):
         dataverses = []
         report_file_paths = []
 
-        # API fields used in reports
-        fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
-        creator_fieldnames = ['creatorIdentifier', 'creatorName', 'creatorEmail', 'creatorAffiliation', 'creatorPosition']
-        all_fieldnames = fieldnames + creator_fieldnames
-
         for key in self.config['accounts']:
             account_info = self.config['accounts'][key]
             self.logger.info("Generating dataverse report for %s.", account_info['identifier'])
@@ -58,7 +58,7 @@ class DataverseReports(object):
 
             # Write results to CSV file
             output_file = account_info['identifier'] + '-dataverses.csv'
-            self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=all_fieldnames, data=dataverses)
+            self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=self.fieldnames, data=dataverses)
 
             # Add file to reports list
             report_file_paths.append(self.config['work_dir'] + output_file)
@@ -73,17 +73,12 @@ class DataverseReports(object):
         # List of Dataverses
         dataverses = []
 
-        # API fields used in reports
-        fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
-        creator_fieldnames = ['creatorIdentifier', 'creatorName', 'creatorEmail', 'creatorAffiliation', 'creatorPosition']
-        all_fieldnames = fieldnames + creator_fieldnames
-
         self.load_dataverses_recursive(dataverses, account_info['identifier'])
 
         # Write results to CSV file
         output_file = account_info['identifier'] + '-dataverses.csv'
         self.logger.info('Storing results in file %s', output_file)
-        self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=all_fieldnames, data=dataverses)
+        self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=self.fieldnames, data=dataverses)
 
         # Send results to contacts list
         self.email_report_institution(report_file_paths=[self.config['work_dir'] + output_file], account_info=account_info)
