@@ -1,7 +1,7 @@
 # dataverse-reports
 A python3-based tool to generate and email statistical reports from Dataverse (https://dataverse.org/) using the native API and database queries.
 
-As with Miniverse, the reports require access to the Dataverse database.
+As with Miniverse (https://github.com/IQSS/miniverse), the reports require access to the Dataverse database.
 
 Configuration
 -----
