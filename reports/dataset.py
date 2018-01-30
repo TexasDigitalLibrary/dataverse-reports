@@ -35,7 +35,8 @@ class DatasetReports(object):
         latest_fieldnames = ['versionState', 'lastUpdateTime', 'releaseTime', 'createTime', 'license', 'termsOfUse']
         metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription', 'notesText', 'subject', 'productionDate', 'productionPlace', 'depositor', 'dateOfDeposit']
         database_fieldnames = ['downloadCount']
-        self.fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames
+        files_metadata = ['contentSize']
+        self.fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_metadata
 
         self.logger = logging.getLogger('dataverse-reports')
 
@@ -142,6 +143,17 @@ class DatasetReports(object):
         download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
         self.logger.info("Download count for dataset: %s", str(download_count))
         dataset['downloadCount'] = download_count
+
+        if 'files' in dataset:
+            contentSize = 0
+            files = dataset['files']
+            for file in files:
+                if 'dataFile' in file:
+                    dataFile = file['dataFile']
+                    filesize = int(dataFile['filesize'])
+                    contentSize += filesize
+            self.logger.info('Totel size of all files in this dataset: %s', str(contentSize))
+            dataset['contentSize'] = contentSize
 
         # Retrieve dataverse to get alias
         dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
