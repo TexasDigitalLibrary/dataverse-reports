@@ -29,7 +29,12 @@ class DataverseReports(object):
         # API fields used in reports
         root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
         creator_fieldnames = ['creatorIdentifier', 'creatorName', 'creatorEmail', 'creatorAffiliation', 'creatorPosition']
-        self.fieldnames = root_fieldnames + creator_fieldnames
+        sword_fieldnames = ['published']
+        self.fieldnames = root_fieldnames + creator_fieldnames + sword_fieldnames
+
+        # Load namespaces for Sword API
+        self.ns = {'atom': 'http://www.w3.org/2005/Atom',
+                    'sword': 'http://purl.org/net/sword/terms/state'}
 
         self.logger = logging.getLogger('dataverse-reports')
 
@@ -121,6 +126,20 @@ class DataverseReports(object):
             if 'position' in creator:
                 dataverse['creatorPosition'] = creator['position']
             dataverse.pop('creator')
+
+        # Add the 'dataverseHasBeenReleased' field from the Sword API
+        if 'alias' in dataverse:
+            sword_dataverse = self.dataverse_api.sword_get_dataverse(dataverse['alias'])
+            dataverse_has_been_released = sword_dataverse.find('sword:dataverseHasBeenReleased', self.ns)
+            if dataverse_has_been_released is not None:
+                if dataverse_has_been_released.text == 'true':
+                    self.logger.debug("Element 'dataverseHasBeenReleased' is true.")
+                    dataverse['published'] = 'Yes'
+                else:
+                    self.logger.deug("Element 'dataverseHasBeenReleased' is false.")
+                    datavere['published'] = 'Now'
+            else:
+                self.logger.debug("Element 'dataverseHasBeenReleased' is not present in XML.")
 
         dataverses.append(dataverse)
 
