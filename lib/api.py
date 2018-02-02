@@ -1,6 +1,9 @@
 import requests
 import logging
 
+from requests.auth import HTTPBasicAuth
+from xml.etree import ElementTree
+
 class DataverseApi(object):
     def __init__(self, host=None, token=None):
         if host[len(host)-1] != '/':
@@ -14,7 +17,6 @@ class DataverseApi(object):
         self.logger = logging.getLogger('dataverse-reports')
         self.logger.debug("Setting Dataverse API host  %s.", self.host)
         self.logger.debug("Setting Dataverse API token %s.", self.token)
-
 
     def test_connection(self):
         url = self.host + 'api/info/version/'
@@ -64,9 +66,22 @@ class DataverseApi(object):
         response_json = response.json()
         return response_json['data']
 
+    def sword_get_dataverse(self, alias=''):
+        if alias is None:
+            self.logger.error("Must specify an alias.")
+            return
+
+        url = self.host + '/dvn/api/data-deposit/' + self.version + '/swordv2/collection/dataverse/' + alias
+        self.logger.debug("Retrieving SWORD dataverse: %s", url)
+        response = requests.get(url, auth=HTTPBasicAuth(self.token, ''))
+        self.logger.debug("Return status: %s", str(response.status_code))
+
+        tree = ElementTree.fromstring(response.content)
+        return tree
+
     def get_dataset(self, identifier=''):
         if identifier is None:
-            self.logger.error("Must specify identifer.")
+            self.logger.error("Must specify an identifer.")
             return
 
         url = self.host + 'api/' + self.version + '/datasets/' + str(identifier)
@@ -90,11 +105,11 @@ class DataverseApi(object):
 
     def make_call(self, type='GET', url=''):
         if type == 'GET':
-            r = requests.get(url, auth=self.token)
+            r = requests.get(url, auth=HTTPBasicAuth(self.token, ''))
         elif type == 'POST':
-            r = requests.put(url, auth=self.token)
+            r = requests.put(url, auth=HTTPBasicAuth(self.token, ''))
         else:
-            r = requests.get(url, auth=self.token)
+            r = requests.get(url, auth=HTTPBasicAuth(self.token, ''))
 
         return r.json
 
