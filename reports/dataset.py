@@ -35,7 +35,7 @@ class DatasetReports(object):
         latest_fieldnames = ['versionState', 'lastUpdateTime', 'releaseTime', 'createTime', 'license', 'termsOfUse']
         metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription', 'notesText', 'subject', 'productionDate', 'productionPlace', 'depositor', 'dateOfDeposit']
         database_fieldnames = ['downloadCount']
-        files_metadata = ['contentSize']
+        files_metadata = ['contentSize (MB)']
         self.fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_metadata
 
         self.logger = logging.getLogger('dataverse-reports')
@@ -162,8 +162,9 @@ class DatasetReports(object):
                     dataFile = file['dataFile']
                     filesize = int(dataFile['filesize'])
                     contentSize += filesize
-            self.logger.info('Totel size of all files in this dataset: %s', str(contentSize))
-            dataset['contentSize'] = contentSize
+            self.logger.info('Totel size (bytes) of all files in this dataset: %s', str(contentSize))
+            # Convert to megabytes for reports
+            dataset['contentSize (MB)'] = (contentSize/1048576)
 
         # Retrieve dataverse to get alias
         dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
