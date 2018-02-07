@@ -98,15 +98,25 @@ class DatasetReports(object):
             self.logger.error("Dataverse identifier is required.")
             return
 
-        # Retrieve datasets for this dataverse
-        dataverse_contents = self.dataverse_api.get_dataverse_contents(dataverse_identifier)
+        self.logger.info("Loading dataverse: %s.", dataverse_identifier)
+
+        # Load dataverse
+        dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
+        response_json = dataverse_response.json()
+        dataverse = response_json['data']
+
+        self.logger.info("Dataverse name: %s", dataverse['name'])
+
+        # Retrieve dvObjects for this dataverse
+        dataverse_contents = self.dataverse_api.get_dataverse_contents(identifier=dataverse_identifier)
+        self.logger.info('Total dvObjects in this dataverse: ' + str(len(dataverse_contents)))
         for dvObject in dataverse_contents:
             if dvObject['type'] == 'dataset':
                 # Add dataset to this dataverse
                 self.logger.info("Adding dataset %s to dataverse %s.", str(dvObject['id']), str(dataverse_identifier))
                 self.add_dataset(datasets, dataverse_identifier, dvObject['id'])
             if dvObject['type'] == 'dataverse':
-                self.logger.info("Found new datavserse %s.", str(dvObject['id']))
+                self.logger.info("Found new dataverse %s.", str(dvObject['id']))
                 self.load_datasets_recursive(datasets, dvObject['id'])
 
     def add_dataset(self, datasets, dataverse_identifier, dataset_id):
@@ -160,7 +170,7 @@ class DatasetReports(object):
         response_json = dataverse_response.json()
         dataverse = response_json['data']
 
-        self.logger.info("Adding another dataset with alias: %s", str(dataverse['alias']))
+        self.logger.info("Adding dataset to dataverse with alias: %s", str(dataverse['alias']))
         dataset['dataverse'] = dataverse['alias']
         datasets.append(dataset)
 
