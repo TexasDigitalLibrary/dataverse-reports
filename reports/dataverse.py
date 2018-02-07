@@ -29,7 +29,7 @@ class DataverseReports(object):
         # API fields used in reports
         root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
         creator_fieldnames = ['creatorIdentifier', 'creatorName', 'creatorEmail', 'creatorAffiliation', 'creatorPosition']
-        sword_fieldnames = ['published']
+        sword_fieldnames = ['released']
         self.fieldnames = root_fieldnames + creator_fieldnames + sword_fieldnames
 
         # Load namespaces for Sword API
@@ -97,7 +97,7 @@ class DataverseReports(object):
         self.load_dataverse(dataverses, dataverse_identifier)
 
         # Load child objects
-        dataverse_contents = self.dataverse_api.get_dataverse_contents(dataverse_identifier)
+        dataverse_contents = self.dataverse_api.get_dataverse_contents(identifier=dataverse_identifier)
         for dvObject in dataverse_contents:
             if dvObject['type'] == 'dataverse':
                 self.load_dataverses_recursive(dataverses, dvObject['id'])
@@ -134,10 +134,10 @@ class DataverseReports(object):
             if dataverse_has_been_released is not None:
                 if dataverse_has_been_released.text == 'true':
                     self.logger.debug("Element 'dataverseHasBeenReleased' is true.")
-                    dataverse['published'] = 'Yes'
+                    dataverse['released'] = 'Yes'
                 else:
-                    self.logger.deug("Element 'dataverseHasBeenReleased' is false.")
-                    datavere['published'] = 'Now'
+                    self.logger.debug("Element 'dataverseHasBeenReleased' is false.")
+                    dataverse['released'] = 'No'
             else:
                 self.logger.debug("Element 'dataverseHasBeenReleased' is not present in XML.")
 
