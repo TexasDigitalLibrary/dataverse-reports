@@ -18,6 +18,8 @@ class DataverseApi(object):
         self.logger.debug("Setting Dataverse API host  %s.", self.host)
         self.logger.debug("Setting Dataverse API token %s.", self.token)
 
+        self.headers = {'X-Dataverse-key': self.token}
+
     def test_connection(self):
         url = self.host + 'api/info/version/'
         self.logger.debug("Testing API connection: %s.", url)
@@ -49,7 +51,7 @@ class DataverseApi(object):
 
         url = self.host + 'api/' + self.version + '/dataverses/' + str(identifier)
         self.logger.debug("Retrieving dataverse: %s.", url)
-        response = requests.get(url)
+        response = requests.get(url, headers=self.headers)
         self.logger.debug("Return status: %s.", str(response.status_code))
         return response
 
@@ -60,7 +62,7 @@ class DataverseApi(object):
 
         url = self.host + 'api/' + self.version + '/dataverses/' + str(identifier) + '/contents'
         self.logger.debug("Retrieving dataverse contents: %s", url)
-        response = requests.get(url)
+        response = requests.get(url, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))
 
         response_json = response.json()
@@ -86,7 +88,7 @@ class DataverseApi(object):
 
         url = self.host + 'api/' + self.version + '/datasets/' + str(identifier)
         self.logger.debug("Retrieving dataset: %s", url)
-        response = requests.get(url)
+        response = requests.get(url, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))
         return response
 
@@ -105,11 +107,11 @@ class DataverseApi(object):
 
     def make_call(self, type='GET', url=''):
         if type == 'GET':
-            r = requests.get(url, auth=HTTPBasicAuth(self.token, ''))
+            r = requests.get(url, headers=self.headers)
         elif type == 'POST':
-            r = requests.put(url, auth=HTTPBasicAuth(self.token, ''))
+            r = requests.put(url, headers=self.headers)
         else:
-            r = requests.get(url, auth=HTTPBasicAuth(self.token, ''))
+            r = requests.get(url, headers=self.headers)
 
         return r.json
 
