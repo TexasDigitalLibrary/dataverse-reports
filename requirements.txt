@@ -10,6 +10,7 @@ lxml==4.1.1
 packaging==16.8
 pip-review==1.0
 pip-tools==1.11.0
+pkg-resources==0.0.0
 psycopg2==2.7.3.2
 pyparsing==2.2.0
 PyYAML==3.12
@@ -17,3 +18,4 @@ requests==2.18.4
 six==1.11.0
 urllib3==1.22
 webencodings==0.5.1
+XlsxWriter==1.0.2

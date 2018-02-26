@@ -11,13 +11,16 @@ $ cp config/application.yml.sample config/application.yml
 ```
 
 Example
-```
+```yaml
 dataverse__api_host: ''
 dataverse__api_key: ''
 dataverse_db_host: ''
 dataverse_db_username: ''
 dataverse_db_password: ''
 work_dir: '/tmp'
+log_path: 'logs'
+log_file: 'dataverse-reports.log'
+log_level: 'INFO'
 from_email: ''
 admin_emails:
         - email1
@@ -56,26 +59,47 @@ NOTE: In some Linux environments pip will not install the underlying requirement
 
 Usage
 -----
-
-All commands run inside the virtual environment.
-
-
-Generate and email a report of all dataverses for super admin(s).
 ```bash
-$ python run.py -c config/application.yml -r dataverse -g all
+Usage: run.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -c CONFIG_FILE, --config=CONFIG_FILE
+                        Configuration file
+  -r REPORTS, --report(s)=REPORTS
+                        Report type(s) to generate. Options = dataverse,
+                        dataset, user, all.
+  -g GROUPING, --group=GROUPING
+                        Grouping of results. Options = institutions, all
+  -o OUTPUT_DIR, --output_dir=OUTPUT_DIR
+                        Directory for results files.
+  -e, --email           Email reports to liaisons?
+```
+
+<h5>Launch virtual environment</h5>
+
+```bash
+$ source venv/bin/activate
+```
+
+<h5>Sample commands run inside the virtual environment.</h5>
+
+Generate and email a report of all dataverses, datasets and users for super admin(s).
+```bash
+$ python run.py -c config/application.yml -r all -g all -o $HOME/reports -e
 ```
 
 Generate and email reports of dataverses for each institution beginning at a top-level dataverse.
 ```bash
-$ python run.py -c config/application.yml -r dataverse -g institutions
+$ python run.py -c config/application.yml -r dataverse -g institutions -o $HOME/reports -e
 ```
 
 Generate and email a report of all datasets for super admin(s).
 ```bash
-$ python run.py -c config/application.yml -r dataset -g all
+$ python run.py -c config/application.yml -r dataset -g all -o $HOME/reports -e
 ```
 
-Generate and email reports of datasets for each institution beginning at a top-level dataverse.
+Generate and email reports of users for each institution beginning at a top-level dataverse.
 ```bash
-$ python run.py -c config/application.yml -r dataset -g institutions
+$ python run.py -c config/application.yml -r user -g institutions -o $HOME/reports -e
 ```

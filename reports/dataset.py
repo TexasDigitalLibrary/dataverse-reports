@@ -30,14 +30,6 @@ class DatasetReports(object):
 
         self.config = config
 
-        # API and database fields used in reports
-        root_fieldnames = ['dataverse', 'id', 'identifier', 'persistentUrl', 'protocol', 'authority', 'publisher', 'publicationDate']
-        latest_fieldnames = ['versionState', 'lastUpdateTime', 'releaseTime', 'createTime', 'license', 'termsOfUse']
-        metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription', 'notesText', 'subject', 'productionDate', 'productionPlace', 'depositor', 'dateOfDeposit']
-        database_fieldnames = ['downloadCount']
-        files_metadata = ['contentSize (MB)']
-        self.fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_metadata
-
         self.logger = logging.getLogger('dataverse-reports')
 
     def generate_reports(self, type='all'):
@@ -78,20 +70,14 @@ class DatasetReports(object):
             self.email_report_admin(report_file_paths=report_file_paths)
 
     def report_datasets_recursive(self, account_info):
-        # List of Datasets
+        # List of datasets
         datasets = []
 
         self.logger.info("Begin loading datasets for %s.", account_info['identifier'])
         self.load_datasets_recursive(datasets, account_info['identifier'])
         self.logger.info("Finished loading %s datasets for %s", str(len(datasets)), account_info['identifier'])
 
-        if len(datasets) > 0:
-            # Write results to CSV file
-            output_file = account_info['identifier'] + '-datasets.csv'
-            self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=self.fieldnames, data=datasets)
-
-            # Send results to contacts list
-            self.email_report_institution(report_file_paths=[self.config['work_dir'] + output_file], account_info=account_info)
+        return datasets
 
     def load_datasets_recursive(self, datasets={}, dataverse_identifier=None):
         if dataverse_identifier is None:
@@ -262,94 +248,3 @@ class DatasetReports(object):
                 return valuesString
             else:
                 self.logger.debug("Unrecognized typeClass: %s", field['typeClass'])
-
-    def save_report(self, output_file_path=None, headers=[], data=[]):
-        # Sanity checks
-        if output_file_path is None:
-            self.logger.error("Output file path is required.")
-            return
-        if not headers:
-            self.logger.error("Report headers are required.")
-            return
-        if not data:
-            self.logger.error("Report data are required.")
-            return
-
-        with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction='ignore', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
-            writer.writeheader()
-            for result in data:
-                writer.writerow(result)
-
-        self.logger.info("Saved report to file %s.", output_file_path)
-
-    def email_report_institution(self, report_file_paths=[], account_info=[]):
-        if len(report_file_paths) == 0:
-            self.logger.error("At least one report file path is required.")
-            return
-
-        # Construct email information
-        subject = 'Dataset report for ' + account_info['name']
-        from_email = self.config['from_email']
-        body = "The report in tab-delimited CSV format is attached."
-
-        # Send email(s) to contact(s)
-        for contact in account_info['contacts']:
-            self.logger.info("Sending report to %s.", contact)
-            self.email_report_internal(report_file_paths=report_file_paths, to_email=contact, from_email=from_email, subject=subject, body=body)
-
-    def email_report_admin(self, report_file_paths=[]):
-        if len(report_file_paths) == 0:
-            self.logger.error("At least one report file path is required.")
-            return
-
-        # Construct email information
-        subject = 'Dataset reports for ' + self.config['dataverse_api_host']
-        from_email = self.config['from_email']
-        body = "The reports in tab-delimited CSV format is attached."
-
-        # Send email(s) to admin email address(es)
-        for admin_email in self.config['admin_emails']:
-            self.logger.info("Sending reports to admin %s.", admin_email)
-            self.email_report_internal(report_file_paths=report_file_paths, to_email=admin_email, from_email=from_email, subject=subject, body=body)
-
-    def email_report_internal(self, report_file_paths=[], to_email=None, from_email=None, subject=None, body=None):
-        if len(report_file_paths) == 0:
-            self.logger.error("At least one report file path is required.")
-            return
-        if to_email is None or from_email is None or subject is None or body is None:
-            self.logger.error("Required email information is missing.")
-            return
-
-        # Create message with text fields
-        message = MIMEMultipart()
-        message['Subject'] = subject
-        message['To'] = to_email
-        message['From'] = from_email
-        message.preamble = body
-
-        # Attach report file(s)
-        for report_file_path in report_file_paths:
-            # Check that report file exists
-            if not os.path.isfile(report_file_path):
-                self.logger.warning("Report file doesn't exist: %s.", report_file_path)
-                continue
-
-            path, report_file_name = os.path.split(report_file_path)
-
-            ctype, encoding = mimetypes.guess_type(report_file_path)
-            if ctype is None or encoding is not None:
-                ctype = 'application/octet-stream'
-            maintype, subtype = ctype.split('/', 1)
-
-            # Attach report
-            with open(report_file_path) as fp:
-                attachment = MIMEText(fp.read(), _subtype=subtype)
-
-            attachment.add_header('Content-Disposition', 'attachment', filename=report_file_name)
-            message.attach(attachment)
-
-        # Send email
-        self.logger.info("Sending dataset report to %s.", to_email)
-        with smtplib.SMTP('localhost') as s:
-            s.send_message(message)
