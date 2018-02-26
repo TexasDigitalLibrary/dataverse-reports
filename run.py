@@ -47,7 +47,10 @@ def main():
     # Load config
     print("Loading configuration from file: %s", options.config_file)
     config = load_config(options.config_file)
-
+    if not config:
+        print("Unable to load configuration.")
+        sys.exit(0)
+        
     # Set up logging
     logger = load_logger(config=config)
 
@@ -223,7 +226,8 @@ def load_config(config_file):
     path = config_file
 
     if not path or not os.path.isfile(path):
-        return {}
+        print('Configuration file is missing.')
+        return False
 
     with open(config_file, 'r') as f:
         config = yaml.safe_load(f)
