@@ -5,6 +5,9 @@ dataverse_db_name: ''
 dataverse_db_username: ''
 dataverse_db_password: ''
 work_dir: '/tmp'
+log_path: 'logs'
+log_file: 'dataverse-reports.log'
+log_level: 'INFO'
 from_email: ''
 admin_emails:
         - email1
