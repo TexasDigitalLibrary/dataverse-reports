@@ -17,6 +17,9 @@ class Output(object):
         if not headers:
             self.logger.error("Report headers are required.")
             return False
+        if not self.ensure_directory_exists(output_file_path):
+            self.logger.error("Output directory doesn't exist and can't be created.")
+            return False
 
         with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction='ignore', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
@@ -34,6 +37,9 @@ class Output(object):
             return False
         if len(worksheet_files) == 0:
             self.logger.error("Worksheets files list is empty.")
+            return False
+        if not self.ensure_directory_exists(output_file_path):
+            self.logger.error("Output directory doesn't exist and can't be created.")
             return False
 
         # Create Excel workbook
@@ -62,3 +68,16 @@ class Output(object):
 
         self.logger.info("Saved report to Excel file %s.", output_file_path)
         return output_file_path
+
+    def ensure_directory_exists(self, output_file_path=None):
+        if output_file_path is None:
+            self.logger.warning('Output file path is empty.')
+            return False
+
+        directory = os.path.dirname(output_file_path)
+
+        if os.path.isdir(directory) and os.path.exists(directory):
+            return True
+        else:
+            os.mkdir(directory)
+            return True

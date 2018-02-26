@@ -50,7 +50,7 @@ def main():
     if not config:
         print("Unable to load configuration.")
         sys.exit(0)
-        
+
     # Set up logging
     logger = load_logger(config=config)
 
@@ -58,6 +58,9 @@ def main():
     output_dir = options.output_dir
     if output_dir[len(output_dir)-1] != '/':
         output_dir = output_dir + '/'
+
+    # Ensure output_dir exists
+    ensure_directory_exists(output_dir)
 
     # Create Dataverse API object test the connection
     dataverse_api = DataverseApi(host=config['dataverse_api_host'], token=config['dataverse_api_key'])
@@ -109,8 +112,6 @@ def main():
 
     # Act based on report grouping
     if options.grouping == 'all':
-        logger.error("Not implemented yet: %s.", options.grouping)
-
         # Store list of Excel report(s)
         excel_reports = []
 
@@ -215,11 +216,7 @@ def main():
     else:
         logger.error("Unrecognized report grouping: %s.", options.grouping)
 
-
-    # Cleanup work dir
-
     logger.info("Finished processing reports.")
-
 
 def load_config(config_file):
     config = {}
@@ -275,6 +272,18 @@ def load_logger(config=None):
 
     return logger
 
+def ensure_directory_exists(output_file_path=None):
+    if output_file_path is None:
+        self.logger.warning('Output file path is empty.')
+        return False
+
+    directory = os.path.dirname(output_file_path)
+
+    if os.path.isdir(directory) and os.path.exists(directory):
+        return True
+    else:
+        os.mkdir(directory)
+        return True
 
 if __name__ == "__main__":
     main()
