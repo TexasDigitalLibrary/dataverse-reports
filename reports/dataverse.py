@@ -92,41 +92,44 @@ class DataverseReports(object):
 
     def load_dataverse(self, dataverses, dataverse_identifier):
         # Load dataverse
+        self.logger.info("Dataverse identifier: %s", dataverse_identifier)
         dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
         response_json = dataverse_response.json()
-        dataverse = response_json['data']
-        # return dataverse
+        if 'data' in response_json:
+            dataverse = response_json['data']            
 
-        self.logger.info("Dataverse name: %s", dataverse['name'])
+            self.logger.info("Dataverse name: %s", dataverse['name'])
 
-        # Flatten the nested creator information
-        if 'creator' in dataverse:
-            self.logger.debug("Replacing creator array.")
-            creator = dataverse['creator']
-            if 'identifier' in creator:
-                dataverse['creatorIdentifier'] = creator['identifier']
-            if 'displayName' in creator:
-                dataverse['creatorName'] = creator['displayName']
-            if 'email' in creator:
-                dataverse['creatorEmail'] = creator['email']
-            if 'affiliation' in creator:
-                dataverse['creatorAffiliation'] = creator['affiliation']
-            if 'position' in creator:
-                dataverse['creatorPosition'] = creator['position']
-            dataverse.pop('creator')
+            # Flatten the nested creator information
+            if 'creator' in dataverse:
+                self.logger.debug("Replacing creator array.")
+                creator = dataverse['creator']
+                if 'identifier' in creator:
+                    dataverse['creatorIdentifier'] = creator['identifier']
+                if 'displayName' in creator:
+                    dataverse['creatorName'] = creator['displayName']
+                if 'email' in creator:
+                    dataverse['creatorEmail'] = creator['email']
+                if 'affiliation' in creator:
+                    dataverse['creatorAffiliation'] = creator['affiliation']
+                if 'position' in creator:
+                    dataverse['creatorPosition'] = creator['position']
+                dataverse.pop('creator')
 
-        # Add the 'dataverseHasBeenReleased' field from the Sword API
-        if 'alias' in dataverse:
-            sword_dataverse = self.dataverse_api.sword_get_dataverse(dataverse['alias'])
-            dataverse_has_been_released = sword_dataverse.find('sword:dataverseHasBeenReleased', self.ns)
-            if dataverse_has_been_released is not None:
-                if dataverse_has_been_released.text == 'true':
-                    self.logger.debug("Element 'dataverseHasBeenReleased' is true.")
-                    dataverse['released'] = 'Yes'
+            # Add the 'dataverseHasBeenReleased' field from the Sword API
+            if 'alias' in dataverse:
+                sword_dataverse = self.dataverse_api.sword_get_dataverse(dataverse['alias'])
+                dataverse_has_been_released = sword_dataverse.find('sword:dataverseHasBeenReleased', self.ns)
+                if dataverse_has_been_released is not None:
+                    if dataverse_has_been_released.text == 'true':
+                        self.logger.debug("Element 'dataverseHasBeenReleased' is true.")
+                        dataverse['released'] = 'Yes'
+                    else:
+                        self.logger.debug("Element 'dataverseHasBeenReleased' is false.")
+                        dataverse['released'] = 'No'
                 else:
-                    self.logger.debug("Element 'dataverseHasBeenReleased' is false.")
-                    dataverse['released'] = 'No'
-            else:
-                self.logger.debug("Element 'dataverseHasBeenReleased' is not present in XML.")
+                    self.logger.debug("Element 'dataverseHasBeenReleased' is not present in XML.")
 
-        dataverses.append(dataverse)
+            dataverses.append(dataverse)
+        else:
+            self.logger.warn("Dataverse was empty.")

@@ -89,77 +89,84 @@ class DatasetReports(object):
         # Load dataverse
         dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
         response_json = dataverse_response.json()
-        dataverse = response_json['data']
+        if 'data' in response_json:
+            dataverse = response_json['data']
 
-        self.logger.info("Dataverse name: %s", dataverse['name'])
+            self.logger.info("Dataverse name: %s", dataverse['name'])
 
-        # Retrieve dvObjects for this dataverse
-        dataverse_contents = self.dataverse_api.get_dataverse_contents(identifier=dataverse_identifier)
-        self.logger.info('Total dvObjects in this dataverse: ' + str(len(dataverse_contents)))
-        for dvObject in dataverse_contents:
-            if dvObject['type'] == 'dataset':
-                # Add dataset to this dataverse
-                self.logger.info("Adding dataset %s to dataverse %s.", str(dvObject['id']), str(dataverse_identifier))
-                self.add_dataset(datasets, dataverse_identifier, dvObject['id'])
-            if dvObject['type'] == 'dataverse':
-                self.logger.info("Found new dataverse %s.", str(dvObject['id']))
-                self.load_datasets_recursive(datasets, dvObject['id'])
+            # Retrieve dvObjects for this dataverse
+            dataverse_contents = self.dataverse_api.get_dataverse_contents(identifier=dataverse_identifier)
+            self.logger.info('Total dvObjects in this dataverse: ' + str(len(dataverse_contents)))
+            for dvObject in dataverse_contents:
+                if dvObject['type'] == 'dataset':
+                    # Add dataset to this dataverse
+                    self.logger.info("Adding dataset %s to dataverse %s.", str(dvObject['id']), str(dataverse_identifier))
+                    self.add_dataset(datasets, dataverse_identifier, dvObject['id'])
+                if dvObject['type'] == 'dataverse':
+                    self.logger.info("Found new dataverse %s.", str(dvObject['id']))
+                    self.load_datasets_recursive(datasets, dvObject['id'])
+        else:
+            self.logger.warn("Dataverse was empty.")
 
     def add_dataset(self, datasets, dataverse_identifier, dataset_id):
         # Load dataset
+        self.logger.info("Dataset id: %s", dataset_id)
         dataset_response = self.dataverse_api.get_dataset(identifier=dataset_id)
         response_json = dataset_response.json()
-        dataset = response_json['data']
+        if 'data' in response_json:
+            dataset = response_json['data']
 
-        if 'latestVersion' in dataset:
-            latest_version = dataset['latestVersion']
-            metadata_blocks = latest_version['metadataBlocks']
+            if 'latestVersion' in dataset:
+                latest_version = dataset['latestVersion']
+                metadata_blocks = latest_version['metadataBlocks']
 
-            # Flatten the latest_version information
-            for key, value in latest_version.items():
-                if key != 'metadataBlocks':
-                    dataset[key] = value
+                # Flatten the latest_version information
+                for key, value in latest_version.items():
+                    if key != 'metadataBlocks':
+                        dataset[key] = value
 
-                # Flatten the nested citation fields information
-                citation = metadata_blocks['citation']
-                fields = citation['fields']
-                for item in fields:
-                    self.logger.debug("Looking at field: %s.", item['typeName'])
-                    valuesString = self.get_value_recursive('', item)
-                    if valuesString.endswith(' ; '):
-                        valuesString = valuesString[:-len(' ; ')]
+                    # Flatten the nested citation fields information
+                    citation = metadata_blocks['citation']
+                    fields = citation['fields']
+                    for item in fields:
+                        self.logger.debug("Looking at field: %s.", item['typeName'])
+                        valuesString = self.get_value_recursive('', item)
+                        if valuesString.endswith(' ; '):
+                            valuesString = valuesString[:-len(' ; ')]
 
-                    typeName = item['typeName']
-                    dataset[typeName] = valuesString
+                        typeName = item['typeName']
+                        dataset[typeName] = valuesString
 
-            # Remove nested information
-            dataset.pop('latestVersion')
+                # Remove nested information
+                dataset.pop('latestVersion')
 
-        # Use dataverse_database to retrieve cumulative download count of file in this dataset
-        download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
-        self.logger.info("Download count for dataset: %s", str(download_count))
-        dataset['downloadCount'] = download_count
+            # Use dataverse_database to retrieve cumulative download count of file in this dataset
+            download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
+            self.logger.info("Download count for dataset: %s", str(download_count))
+            dataset['downloadCount'] = download_count
 
-        if 'files' in dataset:
-            contentSize = 0
-            files = dataset['files']
-            for file in files:
-                if 'dataFile' in file:
-                    dataFile = file['dataFile']
-                    filesize = int(dataFile['filesize'])
-                    contentSize += filesize
-            self.logger.info('Totel size (bytes) of all files in this dataset: %s', str(contentSize))
-            # Convert to megabytes for reports
-            dataset['contentSize (MB)'] = (contentSize/1048576)
+            if 'files' in dataset:
+                contentSize = 0
+                files = dataset['files']
+                for file in files:
+                    if 'dataFile' in file:
+                        dataFile = file['dataFile']
+                        filesize = int(dataFile['filesize'])
+                        contentSize += filesize
+                self.logger.info('Totel size (bytes) of all files in this dataset: %s', str(contentSize))
+                # Convert to megabytes for reports
+                dataset['contentSize (MB)'] = (contentSize/1048576)
 
-        # Retrieve dataverse to get alias
-        dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
-        response_json = dataverse_response.json()
-        dataverse = response_json['data']
+            # Retrieve dataverse to get alias
+            dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
+            response_json = dataverse_response.json()
+            dataverse = response_json['data']
 
-        self.logger.info("Adding dataset to dataverse with alias: %s", str(dataverse['alias']))
-        dataset['dataverse'] = dataverse['alias']
-        datasets.append(dataset)
+            self.logger.info("Adding dataset to dataverse with alias: %s", str(dataverse['alias']))
+            dataset['dataverse'] = dataverse['alias']
+            datasets.append(dataset)
+        else:
+            self.logger.warn("Dataset was empty.")
 
     def get_value_recursive(self, valuesString, field):
         if not field['multiple']:
