@@ -105,11 +105,14 @@ class UserReports(object):
         # Load dataverse
         dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
         response_json = dataverse_response.json()
-        dataverse = response_json['data']
-        self.logger.info("Dataverse name: %s", dataverse['name'])
+        if 'data' in response_json:
+            dataverse = response_json['data']
+            self.logger.info("Dataverse name: %s", dataverse['name'])
 
-        # Add creator information
-        if 'creator' in dataverse:
-            creator = dataverse['creator']
-            self.logger.debug("Adding user of dataverse: %s", creator['displayName'])
-            users.append(creator)
+            # Add creator information
+            if 'creator' in dataverse:
+                creator = dataverse['creator']
+                self.logger.debug("Adding user of dataverse: %s", creator['displayName'])
+                users.append(creator)
+        else:
+            self.logger.warn("Dataverse was empty.")
