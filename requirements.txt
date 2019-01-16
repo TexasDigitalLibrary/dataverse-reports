@@ -18,8 +18,8 @@ pkg-resources==0.0.0
 psycopg2==2.7.5
 pylint==1.9.1
 pyparsing==2.2.2
-PyYAML==3.12
-requests==2.20.0
+PyYAML==3.13
+requests==2.21.0
 six==1.11.0
 urllib3==1.24
 webencodings==0.5.1
