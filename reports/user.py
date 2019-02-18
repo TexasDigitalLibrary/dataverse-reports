@@ -28,46 +28,6 @@ class UserReports(object):
 
         self.logger = logging.getLogger('dataverse-reports')
 
-    def generate_reports(self, type='all'):
-        if type == 'all':
-            self.logger.info("Generating report of all users for super admin.")
-            self.report_users_admin_recursive()
-        elif type == 'institutions':
-            self.logger.info("Generating report of users for each institution.")
-            for key in self.config['accounts']:
-                account_info = self.config['accounts'][key]
-
-                self.logger.info("Generating recursive report for %s.", account_info['name'])
-                self.report_users_recursive(account_info)
-
-    def report_users_admin_recursive(self):
-        # List of Users
-        users = []
-        report_file_paths = []
-
-        for key in self.config['accounts']:
-            account_info = self.config['accounts'][key]
-            self.logger.info("Generating user report for %s.", account_info['identifier'])
-            self.load_users_recursive(users, account_info['identifier'])
-
-            # Get unique list of users
-            users = list({v['id']:v for v in users}.values())
-
-            if len(users) > 0:
-                # Write results to CSV file
-                output_file = account_info['identifier'] + '-users.csv'
-                self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=self.fieldnames, data=users)
-
-                # Add file to reports list
-                report_file_paths.append(self.config['work_dir'] + output_file)
-
-            # Reset list
-            users = []
-
-        # Send results to admin email addresses
-        if len(report_file_paths) > 0:
-            self.email_report_admin(report_file_paths=report_file_paths)
-
     def report_users_recursive(self, account_info):
         # List of users
         users = []

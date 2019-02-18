@@ -31,42 +31,6 @@ class DataverseReports(object):
         self.config = config
         self.logger = logging.getLogger('dataverse-reports')
 
-
-    def generate_reports(self, type='all'):
-        if type == 'all':
-            self.logger.info("Generating report of all dataverses for super admin.")
-            self.report_dataverses_admin_recursive()
-        elif type == 'institutions':
-            self.logger.info("Generating report of dataverses for each institution.")
-            for key in self.config['accounts']:
-                account_info = self.config['accounts'][key]
-
-                self.logger.info("Generating report for %s.",  account_info['name'])
-                self.report_dataverses_recursive(account_info=account_info)
-
-    def report_dataverses_admin_recursive(self):
-        # List of Dataverses
-        dataverses = []
-        report_file_paths = []
-
-        for key in self.config['accounts']:
-            account_info = self.config['accounts'][key]
-            self.logger.info("Generating dataverse report for %s.", account_info['identifier'])
-            self.load_dataverses_recursive(dataverses, account_info['identifier'])
-
-            # Write results to CSV file
-            output_file = account_info['identifier'] + '-dataverses.csv'
-            self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=self.fieldnames, data=dataverses)
-
-            # Add file to reports list
-            report_file_paths.append(self.config['work_dir'] + output_file)
-
-            # Reset list
-            dataverses = []
-
-        # Send results to admin email addresses
-        self.email_report_admin(report_file_paths=report_file_paths)
-
     def report_dataverses_recursive(self, account_info):
         # List of dataverses
         dataverses = []

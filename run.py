@@ -60,7 +60,7 @@ def main():
         output_dir = output_dir + '/'
 
     # Ensure output_dir exists
-    ensure_directory_exists(output_dir)
+    ensure_directory_exists(output_dir, logger)
 
     # Create Dataverse API object test the connection
     dataverse_api = DataverseApi(host=config['dataverse_api_host'], token=config['dataverse_api_key'])
@@ -69,10 +69,11 @@ def main():
         sys.exit(0)
 
     # Create Dataverse database object and test the connection
-    dataverse_database = DataverseDatabase(host=config['dataverse_db_host'], database=config['dataverse_db_name'], username=config['dataverse_db_username'], password=config['dataverse_db_password'])
-    if dataverse_database.create_connection() is False:
-        logger.error("Cannot create reports because the connection to the Dataverse database failed.")
-        sys.exit(0)
+    dataverse_database = None
+    #dataverse_database = DataverseDatabase(host=config['dataverse_db_host'], database=config['dataverse_db_name'], username=config['dataverse_db_username'], password=config['dataverse_db_password'])
+    #if dataverse_database.create_connection() is False:
+    #    logger.error("Cannot create reports because the connection to the Dataverse database failed.")
+    #    sys.exit(0)
 
     # Dataverse fieldnames for CSV reports
     root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
@@ -163,7 +164,7 @@ def main():
 
         if options.email:
             logger.info("Sending email to super admin with the report.")
-            email_sent = email.email_report_admin(report_file_paths=excel_reports)
+            email.email_report_admin(report_file_paths=excel_reports)
 
     elif options.grouping == 'institutions':
         for key in config['accounts']:
@@ -210,7 +211,7 @@ def main():
                     logger.info("Finished saving Excel file to %s.", excel_report_file)
                     if options.email:
                         logger.info("Sending email to institutional liaison with the report.")
-                        email_sent = email.email_report_institution(report_file_paths=[excel_report_file], account_info=account_info)
+                        email.email_report_institution(report_file_paths=[excel_report_file], account_info=account_info)
                 else:
                     logger.error("There was an error saving the Excel file.")
     else:
@@ -272,9 +273,10 @@ def load_logger(config=None):
 
     return logger
 
-def ensure_directory_exists(output_file_path=None):
+def ensure_directory_exists(output_file_path=None, logger=None):
     if output_file_path is None:
-        self.logger.warning('Output file path is empty.')
+        if logger:
+            logger.warning('Output file path is empty.')
         return False
 
     directory = os.path.dirname(output_file_path)

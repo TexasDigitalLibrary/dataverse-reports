@@ -32,43 +32,6 @@ class DatasetReports(object):
 
         self.logger = logging.getLogger('dataverse-reports')
 
-    def generate_reports(self, type='all'):
-        if type == 'all':
-            self.logger.info("Generating report of all datasets for super admin.")
-            self.report_datasets_admin_recursive()
-        elif type == 'institutions':
-            self.logger.info("Generating report of datasets for each institution.")
-            for key in self.config['accounts']:
-                account_info = self.config['accounts'][key]
-
-                self.logger.info("Generating recursive report for %s.", account_info['name'])
-                self.report_datasets_recursive(account_info)
-
-    def report_datasets_admin_recursive(self):
-        # List of Datasets
-        datasets = []
-        report_file_paths = []
-
-        for key in self.config['accounts']:
-            account_info = self.config['accounts'][key]
-            self.logger.info("Generating dataset report for %s.", account_info['identifier'])
-            self.load_datasets_recursive(datasets, account_info['identifier'])
-
-            if len(datasets) > 0:
-                # Write results to CSV file
-                output_file = account_info['identifier'] + '-datasets.csv'
-                self.save_report(output_file_path=self.config['work_dir'] + output_file, headers=self.fieldnames, data=datasets)
-
-                # Add file to reports list
-                report_file_paths.append(self.config['work_dir'] + output_file)
-
-            # Reset list
-            datasets = []
-
-        # Send results to admin email addresses
-        if len(report_file_paths) > 0:
-            self.email_report_admin(report_file_paths=report_file_paths)
-
     def report_datasets_recursive(self, account_info):
         # List of datasets
         datasets = []
@@ -197,7 +160,6 @@ class DatasetReports(object):
                             self.logger.debug("New subValue: %s", subValue)
                             subValue += " - "
 
-                        nick
                         valuesString += subValue + " ; "
                 else:
                     value = field['value']
