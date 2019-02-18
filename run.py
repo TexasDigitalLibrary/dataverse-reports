@@ -69,11 +69,10 @@ def main():
         sys.exit(0)
 
     # Create Dataverse database object and test the connection
-    dataverse_database = None
-    #dataverse_database = DataverseDatabase(host=config['dataverse_db_host'], database=config['dataverse_db_name'], username=config['dataverse_db_username'], password=config['dataverse_db_password'])
-    #if dataverse_database.create_connection() is False:
-    #    logger.error("Cannot create reports because the connection to the Dataverse database failed.")
-    #    sys.exit(0)
+    dataverse_database = DataverseDatabase(host=config['dataverse_db_host'], database=config['dataverse_db_name'], username=config['dataverse_db_username'], password=config['dataverse_db_password'])
+    if dataverse_database.create_connection() is False:
+        logger.error("Cannot create reports because the connection to the Dataverse database failed.")
+        sys.exit(0)
 
     # Dataverse fieldnames for CSV reports
     root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
