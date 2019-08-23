@@ -12,8 +12,8 @@ $ cp config/application.yml.sample config/application.yml
 
 Example
 ```yaml
-dataverse__api_host: ''
-dataverse__api_key: ''
+dataverse_api_host: ''
+dataverse_api_key: ''
 dataverse_db_host: ''
 dataverse_db_username: ''
 dataverse_db_password: ''
