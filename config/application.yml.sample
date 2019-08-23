@@ -1,5 +1,5 @@
-dataverse__api_host: ''
-dataverse__api_key: ''
+dataverse_api_host: ''
+dataverse_api_key: ''
 dataverse_db_host: ''
 dataverse_db_name: ''
 dataverse_db_username: ''
