@@ -30,7 +30,7 @@ class DataverseDatabase(object):
             return
 
         cursor = self.conn.cursor()
-        cursor.execute("SELECT COUNT(id) FROM guestbookresponse WHERE downloadtype = 'Download' AND dataset_id = %s;", [str(dataset_id)])
+        cursor.execute("SELECT COUNT(id) FROM guestbookresponse WHERE dataset_id = %s;", [str(dataset_id)])
         result = cursor.fetchone()
         count = result[0]
         return count

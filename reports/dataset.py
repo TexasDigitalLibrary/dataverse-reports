@@ -5,6 +5,8 @@ import pprint
 import smtplib
 import mimetypes
 import logging
+import requests
+from collections import Counter
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -110,15 +112,20 @@ class DatasetReports(object):
 
             if 'files' in dataset:
                 contentSize = 0
+                count_restricted = 0
                 files = dataset['files']
                 for file in files:
                     if 'dataFile' in file:
+                        if file['restricted']:
+                            count_restricted += 1
                         dataFile = file['dataFile']
                         filesize = int(dataFile['filesize'])
                         contentSize += filesize
                 self.logger.info('Totel size (bytes) of all files in this dataset: %s', str(contentSize))
                 # Convert to megabytes for reports
                 dataset['contentSize (MB)'] = (contentSize/1048576)
+                dataset['Total no of files'] = len(files)
+                dataset['Total no of lockedup files'] = count_restricted
 
             # Retrieve dataverse to get alias
             dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)

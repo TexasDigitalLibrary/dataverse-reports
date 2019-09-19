@@ -75,10 +75,11 @@ def main():
         sys.exit(0)
 
     # Dataverse fieldnames for CSV reports
-    root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
+    root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'ownerId', 'creationDate']
     creator_fieldnames = ['creatorIdentifier', 'creatorName', 'creatorEmail', 'creatorAffiliation', 'creatorPosition']
     sword_fieldnames = ['released']
-    dataverse_fieldnames = root_fieldnames + creator_fieldnames + sword_fieldnames
+    subdv_fieldnames = ['no of subdataverses','SubDVCat_Researcher','SubDVCat_Research_Project','SubDVCat_Research_Group','SubDVCat_Laboratory','SubDVCat_Organization_Or_Institutions','SubDVCat_Department','SubDVCat_Teaching_Course','SubDVCat_Uncategorised','No of published subdataverses','No of unpublished subdataverses','no of datasets','no of published datasets','no of unpublished datasets','Total content size','Total no of files']
+    dataverse_fieldnames = root_fieldnames + subdv_fieldnames + creator_fieldnames + sword_fieldnames
 
     # Dataset fieldnames for CSV reports
     root_fieldnames = ['dataverse', 'id', 'identifier', 'persistentUrl', 'protocol', 'authority', 'publisher', 'publicationDate']
@@ -86,7 +87,8 @@ def main():
     metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription', 'notesText', 'subject', 'productionDate', 'productionPlace', 'depositor', 'dateOfDeposit']
     database_fieldnames = ['downloadCount']
     files_metadata = ['contentSize (MB)']
-    dataset_fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_metadata
+    custom_fields = ['Total no of files','Total no of lockedup files']
+    dataset_fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_metadata + custom_fields
 
     # User fieldnames for CSV reports
     creator_fieldnames = ['id', 'identifier', 'displayName', 'firstName', 'lastName', 'email', 'superuser', 'affiliation', 'position', 'persistentUserId', 'createdTime', 'lastLoginTime']
@@ -100,7 +102,6 @@ def main():
 
     # Create user reports object
     user_reports = UserReports(dataverse_api=dataverse_api, config=config)
-
     # Create output object
     output = Output(config=config)
 
@@ -203,7 +204,7 @@ def main():
                 csv_reports.append(user_report_file)
 
             # Combine CSV report(s) to an Excel spreadsheet
-            if len(csv_reports) > 0:
+            if len(csv_reports) > 0:	
                 output_file_path = output_dir + account_info['identifier'] + '-dataverse-reports.xlsx'
                 excel_report_file = output.save_report_excel_file(output_file_path=output_file_path, worksheet_files=csv_reports)
                 if excel_report_file:
