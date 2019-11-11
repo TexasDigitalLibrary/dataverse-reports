@@ -4,6 +4,7 @@ dataverse_db_host: ''
 dataverse_db_name: ''
 dataverse_db_username: ''
 dataverse_db_password: ''
+include_dataset_metrics: false
 work_dir: '/tmp'
 log_path: 'logs'
 log_file: 'dataverse-reports.log'

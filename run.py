@@ -85,8 +85,11 @@ def main():
     latest_fieldnames = ['versionState', 'lastUpdateTime', 'releaseTime', 'createTime', 'license', 'termsOfUse']
     metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription', 'notesText', 'subject', 'productionDate', 'productionPlace', 'depositor', 'dateOfDeposit']
     database_fieldnames = ['downloadCount']
-    files_metadata = ['contentSize (MB)']
-    dataset_fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_metadata
+    files_fieldnames = ['contentSize (MB)', 'totalFiles', 'totalRestrictedFiles']
+    dataset_metrics_fieldnames = []
+    if (config['include_dataset_metrics']):
+        dataset_metrics_fieldnames = ['viewsUnique', 'viewsTotal','downloadsUnique', 'downloadsTotal']
+    dataset_fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_fieldnames + dataset_metrics_fieldnames
 
     # User fieldnames for CSV reports
     creator_fieldnames = ['id', 'identifier', 'displayName', 'firstName', 'lastName', 'email', 'superuser', 'affiliation', 'position', 'persistentUserId', 'createdTime', 'lastLoginTime']
@@ -109,112 +112,163 @@ def main():
 
     # Start reports
     logger.info("Started creating reports...")
+    
+    # Check for any configured accounts
+    if len(config['accounts']) > 0:
+        # Group reports by institution or all together
+        if options.grouping == 'all':
+            # Store list of Excel report(s)
+            excel_reports = []
 
-    # Act based on report grouping
-    if options.grouping == 'all':
-        # Store list of Excel report(s)
-        excel_reports = []
+            for key in config['accounts']:
+                account_info = config['accounts'][key]
+                logger.info("Generating reports for %s.",  account_info['name'])
 
-        for key in config['accounts']:
-            account_info = config['accounts'][key]
-            logger.info("Generating reports for %s.",  account_info['name'])
+                # Generate CSV report(s) based on command line option
+                csv_reports = []
 
-            # Generate CSV report(s) based on command line option
-            csv_reports = []
+                if options.reports == 'dataverse':
+                    dv_report = dataverse_reports.report_dataverses_recursive(dataverse_identifier=account_info['identifier'])
+                    dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
+                    csv_reports.append(dv_report_file)
+                elif options.reports == 'dataset':
+                    ds_report = dataset_reports.report_datasets_recursive(dataverse_identifier=account_info['identifier'])
+                    # Only save report if there are datasets
+                    if ds_report is not None:
+                        ds_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-datasets.csv', headers=dataset_fieldnames, data=ds_report)
+                        csv_reports.append(ds_report_file)
+                elif options.reports == 'user':
+                    user_report = user_reports.report_users_recursive(dataverse_identifier=account_info['identifier'])
+                    # Only save report if there are users
+                    if user_report is not None:
+                        user_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-users.csv', headers=user_fieldnames, data=user_report)
+                        csv_reports.append(user_report_file)
+                else:   # Default option is all reports
+                    dv_report = dataverse_reports.report_dataverses_recursive(dataverse_identifier=account_info['identifier'])
+                    dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
+                    csv_reports.append(dv_report_file)
 
-            if options.reports == 'dataverse':
-                dv_report = dataverse_reports.report_dataverses_recursive(account_info=account_info)
-                dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
-                csv_reports.append(dv_report_file)
-            elif options.reports == 'dataset':
-                ds_report = dataset_reports.report_datasets_recursive(account_info=account_info)
-                # Only save report if there are datasets
-                if ds_report is not None:
+                    ds_report = dataset_reports.report_datasets_recursive(dataverse_identifier=account_info['identifier'])
                     ds_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-datasets.csv', headers=dataset_fieldnames, data=ds_report)
                     csv_reports.append(ds_report_file)
-            elif options.reports == 'user':
-                user_report = user_reports.report_users_recursive(account_info=account_info)
-                # Only save report if there are users
-                if user_report is not None:
+
+                    user_report = user_reports.report_users_recursive(dataverse_identifier=account_info['identifier'])
                     user_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-users.csv', headers=user_fieldnames, data=user_report)
                     csv_reports.append(user_report_file)
-            else:   # Default option is all reports
-                dv_report = dataverse_reports.report_dataverses_recursive(account_info=account_info)
-                dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
-                csv_reports.append(dv_report_file)
 
-                ds_report = dataset_reports.report_datasets_recursive(account_info=account_info)
+                # Combine CSV report(s) to an Excel spreadsheet
+                if len(csv_reports) > 0:
+                    output_file_path = output_dir + account_info['identifier'] + '-dataverse-reports.xlsx'
+                    excel_report_file = output.save_report_excel_file(output_file_path=output_file_path, worksheet_files=csv_reports)
+                    if excel_report_file:
+                        logger.info("Finished saving Excel file to %s.", excel_report_file)
+                        excel_reports.append(excel_report_file)
+                    else:
+                        logger.error("There was an error saving the Excel file.")
+
+            if options.email:
+                logger.info("Sending email to super admin with the report.")
+                email.email_report_admin(report_file_paths=excel_reports)
+
+        elif options.grouping == 'institutions':
+            for key in config['accounts']:
+                account_info = config['accounts'][key]
+                logger.info("Generating reports for %s.",  account_info['name'])
+
+                # Generate CSV report(s) based on command line option
+                csv_reports = []
+
+                if options.reports == 'dataverse':
+                    dv_report = dataverse_reports.report_dataverses_recursive(dataverse_identifier=account_info['identifier'])
+                    dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
+                    csv_reports.append(dv_report_file)
+                elif options.reports == 'dataset':
+                    ds_report = dataset_reports.report_datasets_recursive(dataverse_identifier=account_info['identifier'])
+                    # Only save report if there are datasets
+                    if ds_report is not None:
+                        ds_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-datasets.csv', headers=dataset_fieldnames, data=ds_report)
+                        csv_reports.append(ds_report_file)
+                elif options.reports == 'user':
+                    user_report = user_reports.report_users_recursive(dataverse_identifier=account_info['identifier'])
+                    # Only save report if there are users
+                    if user_report is not None:
+                        user_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-users.csv', headers=user_fieldnames, data=user_report)
+                        csv_reports.append(user_report_file)
+                else:   # Default option is all reports
+                    dv_report = dataverse_reports.report_dataverses_recursive(dataverse_identifier=account_info['identifier'])
+                    dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
+                    csv_reports.append(dv_report_file)
+
+                    ds_report = dataset_reports.report_datasets_recursive(dataverse_identifier=account_info['identifier'])
+                    ds_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-datasets.csv', headers=dataset_fieldnames, data=ds_report)
+                    csv_reports.append(ds_report_file)
+
+                    user_report = user_reports.report_users_recursive(dataverse_identifier=account_info['identifier'])
+                    user_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-users.csv', headers=user_fieldnames, data=user_report)
+                    csv_reports.append(user_report_file)
+
+                # Combine CSV report(s) to an Excel spreadsheet
+                if len(csv_reports) > 0:
+                    output_file_path = output_dir + account_info['identifier'] + '-dataverse-reports.xlsx'
+                    excel_report_file = output.save_report_excel_file(output_file_path=output_file_path, worksheet_files=csv_reports)
+                    if excel_report_file:
+                        logger.info("Finished saving Excel file to %s.", excel_report_file)
+                        if options.email:
+                            logger.info("Sending email to institutional liaison with the report.")
+                            email.email_report_institution(report_file_paths=[excel_report_file], account_info=account_info)
+                    else:
+                        logger.error("There was an error saving the Excel file.")
+        else:
+            logger.error("Unrecognized report grouping: %s.", options.grouping)
+    else:
+        # Start generating reports at the root dataverse 
+        logger.info('Generating reports from the root dataverse')
+        # Generate CSV report(s) based on command line option
+        csv_reports = []
+
+        if options.reports == 'dataverse':
+            dv_report = dataverse_reports.report_dataverses_recursive(dataverse_identifier='root')
+            dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
+            csv_reports.append(dv_report_file)
+        elif options.reports == 'dataset':
+            ds_report = dataset_reports.report_datasets_recursive(dataverse_identifier='root')
+            # Only save report if there are datasets
+            if ds_report is not None:
                 ds_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-datasets.csv', headers=dataset_fieldnames, data=ds_report)
                 csv_reports.append(ds_report_file)
-
-                user_report = user_reports.report_users_recursive(account_info=account_info)
+        elif options.reports == 'user':
+            user_report = user_reports.report_users_recursive(dataverse_identifier='root')
+            # Only save report if there are users
+            if user_report is not None:
                 user_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-users.csv', headers=user_fieldnames, data=user_report)
                 csv_reports.append(user_report_file)
+        else:   # Default option is all reports
+            dv_report = dataverse_reports.report_dataverses_recursive(dataverse_identifier='root')
+            dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
+            csv_reports.append(dv_report_file)
 
-            # Combine CSV report(s) to an Excel spreadsheet
-            if len(csv_reports) > 0:
-                output_file_path = output_dir + account_info['identifier'] + '-dataverse-reports.xlsx'
-                excel_report_file = output.save_report_excel_file(output_file_path=output_file_path, worksheet_files=csv_reports)
-                if excel_report_file:
-                    logger.info("Finished saving Excel file to %s.", excel_report_file)
-                    excel_reports.append(excel_report_file)
-                else:
-                    logger.error("There was an error saving the Excel file.")
+            ds_report = dataset_reports.report_datasets_recursive(dataverse_identifier='root')
+            ds_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-datasets.csv', headers=dataset_fieldnames, data=ds_report)
+            csv_reports.append(ds_report_file)
+
+            user_report = user_reports.report_users_recursive(dataverse_identifier='root')
+            user_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-users.csv', headers=user_fieldnames, data=user_report)
+            csv_reports.append(user_report_file)
+
+        # Combine CSV report(s) to an Excel spreadsheet
+        if len(csv_reports) > 0:
+            output_file_path = output_dir +  'dataverse-reports.xlsx'
+            excel_report_file = output.save_report_excel_file(output_file_path=output_file_path, worksheet_files=csv_reports)
+            if excel_report_file:
+                logger.info("Finished saving Excel file to %s.", excel_report_file)
+                excel_reports.append(excel_report_file)
+            else:
+                logger.error("There was an error saving the Excel file.")
 
         if options.email:
             logger.info("Sending email to super admin with the report.")
             email.email_report_admin(report_file_paths=excel_reports)
 
-    elif options.grouping == 'institutions':
-        for key in config['accounts']:
-            account_info = config['accounts'][key]
-            logger.info("Generating reports for %s.",  account_info['name'])
-
-            # Generate CSV report(s) based on command line option
-            csv_reports = []
-
-            if options.reports == 'dataverse':
-                dv_report = dataverse_reports.report_dataverses_recursive(account_info=account_info)
-                dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
-                csv_reports.append(dv_report_file)
-            elif options.reports == 'dataset':
-                ds_report = dataset_reports.report_datasets_recursive(account_info=account_info)
-                # Only save report if there are datasets
-                if ds_report is not None:
-                    ds_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-datasets.csv', headers=dataset_fieldnames, data=ds_report)
-                    csv_reports.append(ds_report_file)
-            elif options.reports == 'user':
-                user_report = user_reports.report_users_recursive(account_info=account_info)
-                # Only save report if there are users
-                if user_report is not None:
-                    user_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-users.csv', headers=user_fieldnames, data=user_report)
-                    csv_reports.append(user_report_file)
-            else:   # Default option is all reports
-                dv_report = dataverse_reports.report_dataverses_recursive(account_info=account_info)
-                dv_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-dataverses.csv', headers=dataverse_fieldnames, data=dv_report)
-                csv_reports.append(dv_report_file)
-
-                ds_report = dataset_reports.report_datasets_recursive(account_info=account_info)
-                ds_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-datasets.csv', headers=dataset_fieldnames, data=ds_report)
-                csv_reports.append(ds_report_file)
-
-                user_report = user_reports.report_users_recursive(account_info=account_info)
-                user_report_file = output.save_report_csv_file(output_file_path=config['work_dir'] + account_info['identifier'] + '-users.csv', headers=user_fieldnames, data=user_report)
-                csv_reports.append(user_report_file)
-
-            # Combine CSV report(s) to an Excel spreadsheet
-            if len(csv_reports) > 0:
-                output_file_path = output_dir + account_info['identifier'] + '-dataverse-reports.xlsx'
-                excel_report_file = output.save_report_excel_file(output_file_path=output_file_path, worksheet_files=csv_reports)
-                if excel_report_file:
-                    logger.info("Finished saving Excel file to %s.", excel_report_file)
-                    if options.email:
-                        logger.info("Sending email to institutional liaison with the report.")
-                        email.email_report_institution(report_file_paths=[excel_report_file], account_info=account_info)
-                else:
-                    logger.error("There was an error saving the Excel file.")
-    else:
-        logger.error("Unrecognized report grouping: %s.", options.grouping)
 
     logger.info("Finished processing reports.")
 

@@ -31,12 +31,12 @@ class DataverseReports(object):
         self.config = config
         self.logger = logging.getLogger('dataverse-reports')
 
-    def report_dataverses_recursive(self, account_info):
+    def report_dataverses_recursive(self, dataverse_identifier):
         # List of dataverses
         dataverses = []
 
         # Load dataverses
-        self.load_dataverses_recursive(dataverses, account_info['identifier'])
+        self.load_dataverses_recursive(dataverses, dataverse_identifier)
 
         return dataverses
 
@@ -93,6 +93,12 @@ class DataverseReports(object):
                         dataverse['released'] = 'No'
                 else:
                     self.logger.debug("Element 'dataverseHasBeenReleased' is not present in XML.")
+
+            # Load datasets
+            #dataverse_contents = self.dataverse_api.get_dataverse_contents(identifier=dataverse_identifier)
+            #for dvObject in dataverse_contents:
+                #if dvObject['type'] == 'dataset':
+                    #self.load_dataset(dataverse, dvObject['id']) 
 
             dataverses.append(dataverse)
         else:

@@ -28,13 +28,13 @@ class UserReports(object):
 
         self.logger = logging.getLogger('dataverse-reports')
 
-    def report_users_recursive(self, account_info):
+    def report_users_recursive(self, dataverse_identifier):
         # List of users
         users = []
 
-        self.logger.info("Begin loading users for %s.", account_info['identifier'])
-        self.load_users_recursive(users, account_info['identifier'])
-        self.logger.info("Finished loading %s users for %s", str(len(users)), account_info['identifier'])
+        self.logger.info("Begin loading users for %s.", dataverse_identifier)
+        self.load_users_recursive(users, dataverse_identifier)
+        self.logger.info("Finished loading %s users for %s", str(len(users)), dataverse_identifier)
 
         # Get unique list of users
         users = list({v['id']:v for v in users}.values())
