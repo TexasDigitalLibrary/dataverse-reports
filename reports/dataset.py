@@ -109,8 +109,10 @@ class DatasetReports(object):
                 dataset_metrics_options = ['viewsUnique', 'viewsTotal', 'downloadsUnique', 'downloadsTotal']
                 for dataset_metrics_option in dataset_metrics_options:
                     dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier)
-                    if dataset_metrics_response != '<Response [404]>':
+                    if dataset_metrics_response.status_code == 200:
                         dataset[dataset_metrics_option] = dataset_metrics_response
+                    else:
+                        dataset[dataset_metrics_option] = 'unknown'
 
             # Use dataverse_database to retrieve cumulative download count of file in this dataset
             download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
