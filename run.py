@@ -55,7 +55,7 @@ def main():
     logger = load_logger(config=config)
 
     # Ensure work_dir has trailing slash
-    work_dir = options.work_dir
+    work_dir = config['work_dir']
     if work_dir[len(work_dir)-1] != '/':
         work_dir = work_dir + '/'
 
