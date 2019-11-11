@@ -100,7 +100,7 @@ class DataverseApi(object):
         url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/makedatacount/' + str(option) + '?persistentId=' + doi
         self.logger.debug("Retrieving dataset_metric: %s", url)
         response = requests.get(url, headers=self.headers)
-        self.logger.debug("Return status: %s", str(response.status_code))
+        self.logger.debug("Return status: %s", str(response.status_code))        
         return response
 
     def construct_parameters(self, params={}):
