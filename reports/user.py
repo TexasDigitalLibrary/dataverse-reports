@@ -74,6 +74,8 @@ class UserReports(object):
                 creator = dataverse['creator']
                 self.logger.debug("Adding user of dataverse: %s", creator['displayName'])
                 users.append(creator)
+            elif 'ownerId' in dataverse:
+                ownerId = dataverse['ownerId']
             else:
                 self.logger.warn("Dataverse creator was empty.")
         else:
