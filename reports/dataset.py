@@ -109,10 +109,12 @@ class DatasetReports(object):
                 dataset_metrics_options = ['viewsUnique', 'viewsTotal', 'downloadsUnique', 'downloadsTotal']
                 for dataset_metrics_option in dataset_metrics_options:
                     dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier)
-                    if dataset_metrics_response.status_code == 200:
-                        dataset[dataset_metrics_option] = dataset_metrics_response
+                    if dataset_metrics_response['status'] == 'OK':
+                        if dataset_metrics_option in dataset_metrics_response['data']:
+                            self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_response['data'][dataset_metrics_option]))
+                            dataset[dataset_metrics_option] = dataset_metrics_response['data'][dataset_metrics_option]
                     else:
-                        dataset[dataset_metrics_option] = 'unknown'
+                        dataset[dataset_metrics_option] = '0'
 
             # Use dataverse_database to retrieve cumulative download count of file in this dataset
             download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)

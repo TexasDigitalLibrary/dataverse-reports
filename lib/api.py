@@ -97,11 +97,11 @@ class DataverseApi(object):
             self.logger.error("Must specify an identifer, option and DOI.")
             return
 
-        url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/makedatacount/' + str(option) + '?persistentId=' + doi
+        url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/makeDataCount/' + str(option) + '?persistentId=' + doi
         self.logger.debug("Retrieving dataset_metric: %s", url)
         response = requests.get(url, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))        
-        return response
+        return response.json()
 
     def construct_parameters(self, params={}):
         parameters = ''
