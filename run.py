@@ -81,7 +81,7 @@ def main():
 
     # Dataverse fieldnames for CSV reports
     root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
-    creator_fieldnames = ['creatorIdentifier', 'creatorName', 'creatorEmail', 'creatorAffiliation', 'creatorPosition']
+    creator_fieldnames = ['creatorIdentifier', 'creatorFirstName', 'creatorLastName', 'creatorEmail', 'creatorAffiliation', 'creatorRoles']
     sword_fieldnames = ['released']
     dataverse_fieldnames = root_fieldnames + creator_fieldnames + sword_fieldnames
 
@@ -97,7 +97,7 @@ def main():
     dataset_fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_fieldnames + dataset_metrics_fieldnames
 
     # User fieldnames for CSV reports
-    creator_fieldnames = ['id', 'identifier', 'displayName', 'firstName', 'lastName', 'email', 'superuser', 'affiliation', 'position', 'persistentUserId', 'createdTime', 'lastLoginTime']
+    creator_fieldnames = ['id', 'userIdentifier', 'firstName', 'lastName', 'email', 'isSuperuser', 'roles', 'createdTime', 'lastLoginTime']
     user_fieldnames = creator_fieldnames
 
     # Create dataverse reports object

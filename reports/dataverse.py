@@ -8,6 +8,8 @@ import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from .user import UserReports
+
 class DataverseReports(object):
     def __init__(self, dataverse_api=None, config=None):
         if dataverse_api is None:
@@ -19,6 +21,11 @@ class DataverseReports(object):
             return
 
         self.dataverse_api = dataverse_api
+        self.config = config
+        self.logger = logging.getLogger('dataverse-reports')
+
+        # Create UserReports object to retrieve user metadata
+        self.user_reports = UserReports(dataverse_api=dataverse_api, config=config)
 
         # Ensure trailing slash on work_dir
         if config['work_dir'][len(config['work_dir'])-1] != '/':
@@ -27,9 +34,6 @@ class DataverseReports(object):
         # Load namespaces for Sword API
         self.ns = {'atom': 'http://www.w3.org/2005/Atom',
                     'sword': 'http://purl.org/net/sword/terms/state'}
-
-        self.config = config
-        self.logger = logging.getLogger('dataverse-reports')
 
     def report_dataverses_recursive(self, dataverse_identifier):
         # List of dataverses
@@ -65,7 +69,28 @@ class DataverseReports(object):
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
             # Flatten the nested creator information
-            if 'creator' in dataverse:
+            if 'ownerId' in dataverse:
+                ownerId = dataverse['ownerId']
+                self.logger.debug("Found ownerId of dataverse creator: %s", str(ownerId))
+                user = self.user_reports.find_user(ownerId)
+                if bool(user):
+                    self.logger.debug("Adding creator information: %s", user)
+                    if 'userIdentifier' in user:
+                        dataverse['creatorIdentifier'] = user['identifier']
+                    if 'firstName' in user:
+                        dataverse['creatorFirstName'] = user['firstName']
+                    if 'lastName' in user:
+                        dataverse['creatorLastName'] = user['lastName']
+                    if 'email' in user:
+                        dataverse['creatorEmail'] = user['email']
+                    if 'affiliation' in user:
+                        dataverse['creatorAffiliation'] = user['affiliation']
+                    if 'roles' in user:
+                        dataverse['creatorRoles'] = user['roles']                    
+                else:
+                    self.logger.warn("Unable to find dataverse creator in all_users list.")
+                dataverse.pop['ownerId']
+            elif 'creator' in dataverse:
                 self.logger.debug("Replacing creator array.")
                 creator = dataverse['creator']
                 if 'identifier' in creator:
@@ -78,7 +103,7 @@ class DataverseReports(object):
                     dataverse['creatorAffiliation'] = creator['affiliation']
                 if 'position' in creator:
                     dataverse['creatorPosition'] = creator['position']
-                dataverse.pop('creator')
+                dataverse.pop('creator')            
 
             # Add the 'dataverseHasBeenReleased' field from the Sword API
             if 'alias' in dataverse:

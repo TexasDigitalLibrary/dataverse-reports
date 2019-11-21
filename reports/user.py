@@ -54,6 +54,8 @@ class UserReports(object):
         self.logger.info("Loaded " + str(len(all_users)) + " users.")
         if len(all_users) != users_count:
             self.logger.warn("Unable to load all users: " + str(users_count))
+        
+        return all_users
 
     def find_user(self, userId):
         user = {}
@@ -106,16 +108,19 @@ class UserReports(object):
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
             # Add creator information
-            if 'creator' in dataverse:
+            if 'ownerId' in dataverse:
+                ownerId = dataverse['ownerId']
+                self.logger.debug("Found ownerId of dataverse creator: %s", str(ownerId))
+                user = self.find_user(ownerId)
+                if bool(user):
+                    self.logger.debug("Adding creator information: %s", user)
+                    users.append(user)
+                else:
+                    self.logger.warn("Unable to find dataverse creator in all_users list.")
+            elif 'creator' in dataverse:        # Legacy field in older Dataverse versions
                 creator = dataverse['creator']
                 self.logger.debug("Adding user of dataverse: %s", creator['displayName'])
                 users.append(creator)
-            elif 'ownerId' in dataverse:
-                ownerId = dataverse['ownerId']
-                self.logger.debug("Found ownerId of dataverse: %s", str(ownerId))
-                user = self.find_user(ownerId)
-                if bool(user):
-                    users.append(user)
             else:
                 self.logger.warn("Dataverse creator was empty.")
         else:
