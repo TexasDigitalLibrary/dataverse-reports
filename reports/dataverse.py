@@ -76,7 +76,7 @@ class DataverseReports(object):
                 if bool(user):
                     self.logger.debug("Adding creator information: %s", user)
                     if 'userIdentifier' in user:
-                        dataverse['creatorIdentifier'] = user['identifier']
+                        dataverse['creatorIdentifier'] = user['userIdentifier']
                     if 'firstName' in user:
                         dataverse['creatorFirstName'] = user['firstName']
                     if 'lastName' in user:
@@ -89,8 +89,7 @@ class DataverseReports(object):
                         dataverse['creatorRoles'] = user['roles']                    
                 else:
                     self.logger.warn("Unable to find dataverse creator in all_users list.")
-                dataverse.pop['ownerId']
-            elif 'creator' in dataverse:
+            elif 'creator' in dataverse:        # Legacy field in older Dataverse versions
                 self.logger.debug("Replacing creator array.")
                 creator = dataverse['creator']
                 if 'identifier' in creator:
