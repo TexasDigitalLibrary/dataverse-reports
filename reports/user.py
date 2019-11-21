@@ -28,6 +28,42 @@ class UserReports(object):
 
         self.logger = logging.getLogger('dataverse-reports')
 
+        self.all_users = self.load_all_users_list()
+
+    def load_all_users_list(self):
+        # List of all users
+        all_users = []
+
+        self.logger.info("Retrieving all Dataverse users...")
+        current_page = 1
+        users_count = 0
+
+        while True:
+            users_list_response = self.dataverse_api.get_admin_list_users(page=current_page)
+            if users_list_response['status'] == 'OK':
+                users_list_data = users_list_response['data']
+                all_users = all_users + users_list_data['users']
+                users_count = users_list_data['userCount']
+                total_pages = users_list_data['pagination']['pageCount']
+                if current_page == total_pages:
+                    break
+                current_page += 1
+            else:
+                break
+        
+        self.logger.info("Loaded " + str(len(all_users)) + " users.")
+        if len(all_users) != users_count:
+            self.logger.warn("Unable to load all users: " + str(users_count))
+
+    def find_user(self, userId):
+        user = {}
+
+        for u in self.all_users:
+            if userId == u['id']:
+                user = u
+
+        return user
+
     def report_users_recursive(self, dataverse_identifier):
         # List of users
         users = []
@@ -76,6 +112,10 @@ class UserReports(object):
                 users.append(creator)
             elif 'ownerId' in dataverse:
                 ownerId = dataverse['ownerId']
+                self.logger.debug("Found ownerId of dataverse: %s", str(ownerId))
+                user = self.find_user(ownerId)
+                if bool(user):
+                    users.append(user)
             else:
                 self.logger.warn("Dataverse creator was empty.")
         else:

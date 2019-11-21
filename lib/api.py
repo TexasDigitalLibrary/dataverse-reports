@@ -103,6 +103,13 @@ class DataverseApi(object):
         self.logger.debug("Return status: %s", str(response.status_code))        
         return response.json()
 
+    def get_admin_list_users(self, page=1):
+        url = self.host + 'api/' + self.version + '/admin/list-users/?selectedPage=' + str(page)
+        self.logger.debug("Retrieving users list: %s", url)
+        response = requests.get(url, headers=self.headers)
+        self.logger.debug("Return status: %s", str(response.status_code))
+        return response.json()
+
     def construct_parameters(self, params={}):
         parameters = ''
         first = True
