@@ -114,10 +114,10 @@ class DataverseReports(object):
                 if 'message' in dataverse_size:
                     size_message = dataverse_size['message']
                     self.logger.debug("The message element from storagesize endpoint: " + size_message)
-                    size_bytes_match = re.search(self.dataverse_size_pattern, size_bytes_match)
-                    if size_bytes_match:
+                    size_bytes_match = re.search(self.dataverse_size_pattern, size_message)
+                    if size_bytes_match is not None:
                         size_bytes_string = size_bytes_match.group(1)
-                        size_bytes = int(size_bytes_match.replace(',',''))
+                        size_bytes = int(size_bytes_string.replace(',',''))
                         dataverse['contentSize (MB)'] = (size_bytes/1048576)
                     else:
                         self.logger.warning("Unable to find the bytes value in the message.")
