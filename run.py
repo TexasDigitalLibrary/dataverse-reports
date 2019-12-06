@@ -82,8 +82,9 @@ def main():
     # Dataverse fieldnames for CSV reports
     root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
     creator_fieldnames = ['creatorIdentifier', 'creatorFirstName', 'creatorLastName', 'creatorEmail', 'creatorAffiliation', 'creatorRoles']
+    files_fieldnames = ['contentSize (MB)']
     sword_fieldnames = ['released']
-    dataverse_fieldnames = root_fieldnames + creator_fieldnames + sword_fieldnames
+    dataverse_fieldnames = root_fieldnames + creator_fieldnames + files_fieldnames + sword_fieldnames
 
     # Dataset fieldnames for CSV reports
     root_fieldnames = ['dataverse', 'id', 'identifier', 'persistentUrl', 'protocol', 'authority', 'publisher', 'publicationDate']

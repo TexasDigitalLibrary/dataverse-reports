@@ -2,6 +2,7 @@ import os
 import sys
 import csv
 import pprint
+import re
 import smtplib
 import mimetypes
 import logging
@@ -22,6 +23,7 @@ class DataverseReports(object):
 
         self.dataverse_api = dataverse_api
         self.config = config
+        self.dataverse_size_pattern = re.compile('dataverse:\s(.*)\sbyte')
         self.logger = logging.getLogger('dataverse-reports')
 
         # Create UserReports object to retrieve user metadata
@@ -103,6 +105,24 @@ class DataverseReports(object):
                 if 'position' in creator:
                     dataverse['creatorPosition'] = creator['position']
                 dataverse.pop('creator')            
+
+            # Add the data (file) size of the dataverse and all its sub-dataverses
+            dataverse_size_response = self.dataverse_api.get_dataverse_size(identifier=dataverse_identifier)
+            response_size_json = dataverse_size_response.json()
+            if response_size_json['status'] == 'OK' and 'data' in response_size_json:
+                dataverse_size = response_size_json['data']
+                if 'message' in dataverse_size:
+                    size_message = dataverse_size['message']
+                    self.logger.debug("The message element from storagesize endpoint: " + size_message)
+                    size_bytes_match = re.search(self.dataverse_size_pattern, size_bytes_match)
+                    if size_bytes_match:
+                        size_bytes_string = size_bytes_match.group(1)
+                        size_bytes = int(size_bytes_match.replace(',',''))
+                        dataverse['contentSize (MB)'] = (size_bytes/1048576)
+                    else:
+                        self.logger.warning("Unable to find the bytes value in the message.")
+                else:
+                    self.logger.warning("No message element in response from storagesize endpoint.")
 
             # Add the 'dataverseHasBeenReleased' field from the Sword API
             if 'alias' in dataverse:

@@ -108,13 +108,15 @@ class DatasetReports(object):
                 # Use Make Data Count endpoints to gather views and downloads statistics
                 dataset_metrics_options = ['viewsUnique', 'viewsTotal', 'downloadsUnique', 'downloadsTotal']
                 for dataset_metrics_option in dataset_metrics_options:
+                    self.logger.debug("Calling endpoint for dataset metric: " + dataset_metrics_option)
                     dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier)
-                    if dataset_metrics_response['status'] == 'OK':
-                        if dataset_metrics_option in dataset_metrics_response['data']:
-                            self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_response['data'][dataset_metrics_option]))
-                            dataset[dataset_metrics_option] = dataset_metrics_response['data'][dataset_metrics_option]
+                    dataset_metrics_json = dataset_metrics_response.json()
+                    if dataset_metrics_json['status'] == 'OK' and dataset_metrics_option in dataset_metrics_json['data']:                        
+                        self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_response['data'][dataset_metrics_option]))
+                        dataset[dataset_metrics_option] = dataset_metrics_response['data'][dataset_metrics_option]
                     else:
-                        dataset[dataset_metrics_option] = '0'
+                        self.logger.debug("Call was unsuccessfull.")
+                        dataset[dataset_metrics_option] = 0
 
             # Use dataverse_database to retrieve cumulative download count of file in this dataset
             download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
