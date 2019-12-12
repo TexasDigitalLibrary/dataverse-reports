@@ -107,7 +107,7 @@ class DataverseReports(object):
                 dataverse.pop('creator')            
 
             # Add the data (file) size of the dataverse and all its sub-dataverses
-            dataverse_size_response = self.dataverse_api.get_dataverse_size(identifier=dataverse_identifier)
+            dataverse_size_response = self.dataverse_api.get_dataverse_size(identifier=dataverse_identifier, includeCached=True)
             response_size_json = dataverse_size_response.json()
             if response_size_json['status'] == 'OK' and 'data' in response_size_json:
                 dataverse_size = response_size_json['data']
