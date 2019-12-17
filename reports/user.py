@@ -115,7 +115,7 @@ class UserReports(object):
                     if 'contactEmail' in dataverseContact:
                         contactEmail = dataverseContact['contactEmail']
                         self.logger.debug("Found email of dataverse contact: %s", str(contactEmail))
-                        user = self.user_reports.find_user_email(contactEmail)
+                        user = self.find_user_email(contactEmail)
                         if bool(user):
                             self.logger.debug("Adding contact information: %s", user)
                             if 'userIdentifier' in user:
@@ -131,7 +131,7 @@ class UserReports(object):
                             if 'roles' in user:
                                 dataverse['creatorRoles'] = user['roles']
                         else:
-                            self.logger.warn("Unable to find user from dataverseContact email.")
+                            self.logger.warn("Unable to find user from dataverseContact email: " + str(contactEmail))
                     else:
                         self.logger.warn("First dataverseContact doesn't have an email.")
                 else:
