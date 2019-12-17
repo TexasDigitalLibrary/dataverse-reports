@@ -112,8 +112,8 @@ class DatasetReports(object):
                     dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier)
                     dataset_metrics_json = dataset_metrics_response.json()
                     if dataset_metrics_json['status'] == 'OK' and dataset_metrics_option in dataset_metrics_json['data']:                        
-                        self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_response['data'][dataset_metrics_option]))
-                        dataset[dataset_metrics_option] = dataset_metrics_response['data'][dataset_metrics_option]
+                        self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_json['data'][dataset_metrics_option]))
+                        dataset[dataset_metrics_option] = dataset_metrics_json['data'][dataset_metrics_option]
                     else:
                         self.logger.debug("Call was unsuccessfull.")
                         dataset[dataset_metrics_option] = 0
