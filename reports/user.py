@@ -57,11 +57,11 @@ class UserReports(object):
         
         return all_users
 
-    def find_user(self, userId):
+    def find_user_email(self, email):
         user = {}
 
         for u in self.all_users:
-            if userId == u['id']:
+            if email == u['email']:
                 user = u
 
         return user
@@ -108,15 +108,34 @@ class UserReports(object):
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
             # Add creator information
-            if 'ownerId' in dataverse:
-                ownerId = dataverse['ownerId']
-                self.logger.debug("Found ownerId of dataverse creator: %s", str(ownerId))
-                user = self.find_user(ownerId)
-                if bool(user):
-                    self.logger.debug("Adding creator information: %s", user)
-                    users.append(user)
+            if 'dataverseContacts' in dataverse:
+                dataverseContacts = dataverse['dataverseContacts']
+                if len(dataverseContacts) > 0:
+                    dataverseContact = dataverseContacts[0]
+                    if 'contactEmail' in dataverseContact:
+                        contactEmail = dataverseContact['contactEmail']
+                        self.logger.debug("Found email of dataverse contact: %s", str(contactEmail))
+                        user = self.user_reports.find_user_email(contactEmail)
+                        if bool(user):
+                            self.logger.debug("Adding contact information: %s", user)
+                            if 'userIdentifier' in user:
+                                dataverse['creatorIdentifier'] = user['userIdentifier']
+                            if 'firstName' in user:
+                                dataverse['creatorFirstName'] = user['firstName']
+                            if 'lastName' in user:
+                                dataverse['creatorLastName'] = user['lastName']
+                            if 'email' in user:
+                                dataverse['creatorEmail'] = user['email']
+                            if 'affiliation' in user:
+                                dataverse['creatorAffiliation'] = user['affiliation']
+                            if 'roles' in user:
+                                dataverse['creatorRoles'] = user['roles']
+                        else:
+                            self.logger.warn("Unable to find user from dataverseContact email.")
+                    else:
+                        self.logger.warn("First dataverseContact doesn't have an email.")
                 else:
-                    self.logger.warn("Unable to find dataverse creator in all_users list.")
+                    self.logger.warn("List of dataverseContacts is empty.")
             elif 'creator' in dataverse:        # Legacy field in older Dataverse versions
                 creator = dataverse['creator']
                 self.logger.debug("Adding user of dataverse: %s", creator['displayName'])
