@@ -95,6 +95,7 @@ class DataverseReports(object):
                                 dataverse['creatorRoles'] = user['roles']
                         else:
                             self.logger.warn("Unable to find user from dataverseContact email: " + contactEmail)
+                            dataverse['creatorEmail'] = contactEmail
                     else:
                         self.logger.warn("First dataverseContact doesn't have an email.")
                 else:
