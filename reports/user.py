@@ -100,6 +100,9 @@ class UserReports(object):
                 self.load_users_recursive(users, dvObject['id'])
 
     def load_user_dataverse(self, users, dataverse_identifier):
+        # Vars
+        new_user = {}
+
         # Load dataverse
         dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
         response_json = dataverse_response.json()
@@ -118,28 +121,36 @@ class UserReports(object):
                         user = self.find_user_email(contactEmail)
                         if bool(user):
                             self.logger.debug("Adding contact information: %s", user)
+                            if 'id' in user:
+                                new_user['id'] = user['id']
                             if 'userIdentifier' in user:
-                                dataverse['creatorIdentifier'] = user['userIdentifier']
+                                new_user['userIdentifier'] = user['userIdentifier']
                             if 'firstName' in user:
-                                dataverse['creatorFirstName'] = user['firstName']
+                                new_user['firstName'] = user['firstName']
                             if 'lastName' in user:
-                                dataverse['creatorLastName'] = user['lastName']
+                                new_user['lastName'] = user['lastName']
                             if 'email' in user:
-                                dataverse['creatorEmail'] = user['email']
+                                new_user['email'] = user['email']
                             if 'affiliation' in user:
-                                dataverse['creatorAffiliation'] = user['affiliation']
+                                new_user['affiliation'] = user['affiliation']
+                            if 'position' in user:
+                                new_user['position'] = user['position']
+                            if 'isSuperuser' in user:
+                                new_user['isSuperuser'] = user['isSuperuser']
                             if 'roles' in user:
-                                dataverse['creatorRoles'] = user['roles']
+                                new_user['creatorRoles'] = user['roles']
                         else:
                             self.logger.warn("Unable to find user from dataverseContact email: " + str(contactEmail))
-                            dataverse['creatorEmail'] = contactEmail
                     else:
-                        self.logger.warn("First dataverseContact doesn't have an email.")                
+                        self.logger.warn("First dataverseContact doesn't have an email.")
             elif 'creator' in dataverse:        # Legacy field in older Dataverse versions
-                creator = dataverse['creator']
-                self.logger.debug("Adding user of dataverse: %s", creator['displayName'])
-                users.append(creator)
+                new_user = dataverse['creator']
+                self.logger.debug("Adding creator of dataverse: %s", dataverse['creator']['displayName'])
             else:
                 self.logger.warn("Dataverse creator was empty.")
         else:
             self.logger.warn("Dataverse was empty.")
+
+        # Add new user to users list if one was found
+        if new_user:
+            users.append(new_user)

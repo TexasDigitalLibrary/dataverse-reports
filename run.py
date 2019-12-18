@@ -98,7 +98,7 @@ def main():
     dataset_fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_fieldnames + dataset_metrics_fieldnames
 
     # User fieldnames for CSV reports
-    creator_fieldnames = ['id', 'userIdentifier', 'firstName', 'lastName', 'email', 'isSuperuser', 'roles', 'createdTime', 'lastLoginTime']
+    creator_fieldnames = ['id', 'userIdentifier', 'firstName', 'lastName', 'email', 'affiliation', 'position', 'isSuperuser', 'roles', 'createdTime', 'lastLoginTime']
     user_fieldnames = creator_fieldnames
 
     # Create dataverse reports object
