@@ -74,6 +74,7 @@ class DataverseReports(object):
             if 'dataverseContacts' in dataverse:
                 dataverseContacts = dataverse['dataverseContacts']
                 if len(dataverseContacts) > 0:
+                    self.logger.debug("The dataverseContacts list contains " + str(len(dataverseContacts)) + " contacts.")
                     dataverseContact = dataverseContacts[0]
                     if 'contactEmail' in dataverseContact:
                         contactEmail = dataverseContact['contactEmail'].strip()
