@@ -121,31 +121,14 @@ class UserReports(object):
                         user = self.find_user_email(contactEmail)
                         if bool(user):
                             self.logger.debug("Adding contact information: %s", user)
-                            if 'id' in user:
-                                new_user['id'] = user['id']
-                            if 'userIdentifier' in user:
-                                new_user['userIdentifier'] = user['userIdentifier']
-                            if 'firstName' in user:
-                                new_user['firstName'] = user['firstName']
-                            if 'lastName' in user:
-                                new_user['lastName'] = user['lastName']
-                            if 'email' in user:
-                                new_user['email'] = user['email']
-                            if 'affiliation' in user:
-                                new_user['affiliation'] = user['affiliation']
-                            if 'position' in user:
-                                new_user['position'] = user['position']
-                            if 'isSuperuser' in user:
-                                new_user['isSuperuser'] = user['isSuperuser']
-                            if 'roles' in user:
-                                new_user['creatorRoles'] = user['roles']
+                            new_user = user
                         else:
                             self.logger.warn("Unable to find user from dataverseContact email: " + str(contactEmail))
                     else:
                         self.logger.warn("First dataverseContact doesn't have an email.")
             elif 'creator' in dataverse:        # Legacy field in older Dataverse versions
                 new_user = dataverse['creator']
-                self.logger.debug("Adding creator of dataverse: %s", dataverse['creator']['displayName'])
+                self.logger.debug("Adding creator of dataverse: %s", dataverse['creator'])
             else:
                 self.logger.warn("Dataverse creator was empty.")
         else:
