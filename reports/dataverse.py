@@ -70,7 +70,7 @@ class DataverseReports(object):
 
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
-            # Flatten the nested creator information
+            # Flatten the nested contact information
             if 'dataverseContacts' in dataverse:
                 dataverseContacts = dataverse['dataverseContacts']
                 if len(dataverseContacts) > 0:
@@ -83,20 +83,20 @@ class DataverseReports(object):
                         if bool(user):
                             self.logger.debug("Adding contact information: %s", user)
                             if 'userIdentifier' in user:
-                                dataverse['creatorIdentifier'] = user['userIdentifier']
+                                dataverse['contactIdentifier'] = user['userIdentifier']
                             if 'firstName' in user:
-                                dataverse['creatorFirstName'] = user['firstName']
+                                dataverse['contactFirstName'] = user['firstName']
                             if 'lastName' in user:
-                                dataverse['creatorLastName'] = user['lastName']
+                                dataverse['contactLastName'] = user['lastName']
                             if 'email' in user:
-                                dataverse['creatorEmail'] = user['email']
+                                dataverse['contactEmail'] = user['email']
                             if 'affiliation' in user:
-                                dataverse['creatorAffiliation'] = user['affiliation']
+                                dataverse['contactAffiliation'] = user['affiliation']
                             if 'roles' in user:
-                                dataverse['creatorRoles'] = user['roles']
+                                dataverse['contactRoles'] = user['roles']
                         else:
                             self.logger.warn("Unable to find user from dataverseContact email: " + contactEmail)
-                            dataverse['creatorEmail'] = contactEmail
+                            dataverse['contactEmail'] = contactEmail
                     else:
                         self.logger.warn("First dataverseContact doesn't have an email.")
                 else:
@@ -105,18 +105,18 @@ class DataverseReports(object):
                 self.logger.debug("Replacing creator array.")
                 creator = dataverse['creator']
                 if 'identifier' in creator:
-                    dataverse['creatorIdentifier'] = creator['identifier']
+                    dataverse['contactIdentifier'] = creator['identifier']
                 if 'displayName' in creator:
-                    dataverse['creatorName'] = creator['displayName']
+                    dataverse['contactName'] = creator['displayName']
                 if 'email' in creator:
-                    dataverse['creatorEmail'] = creator['email']
+                    dataverse['contactEmail'] = creator['email']
                 if 'affiliation' in creator:
-                    dataverse['creatorAffiliation'] = creator['affiliation']
+                    dataverse['contactAffiliation'] = creator['affiliation']
                 if 'position' in creator:
-                    dataverse['creatorPosition'] = creator['position']
+                    dataverse['contactPosition'] = creator['position']
                 dataverse.pop('creator')
             else:
-                self.logger.warn("Unable to find dataverse creator information.")
+                self.logger.warn("Unable to find dataverse contact information.")
 
             # Add the data (file) size of the dataverse and all its sub-dataverses
             dataverse_size_response = self.dataverse_api.get_dataverse_size(identifier=dataverse_identifier, includeCached=True)

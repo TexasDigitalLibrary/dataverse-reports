@@ -87,7 +87,7 @@ class UserReports(object):
         self.logger.info("Loading dataverse: %s.", dataverse_identifier)
 
         # Add user to list
-        self.logger.info('Adding creator of dataverse to report: %s', dataverse_identifier)
+        self.logger.info('Adding contact of dataverse to report: %s', dataverse_identifier)
         self.load_user_dataverse(users, dataverse_identifier)
 
         # Retrieve dvObjects for this dataverse
@@ -110,7 +110,7 @@ class UserReports(object):
             dataverse = response_json['data']
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
-            # Add creator information
+            # Add contact information
             if 'dataverseContacts' in dataverse:
                 dataverseContacts = dataverse['dataverseContacts']
                 self.logger.debug("The dataverseContacts list contains " + str(len(dataverseContacts)) + " contacts.")
@@ -127,10 +127,10 @@ class UserReports(object):
                     else:
                         self.logger.warn("First dataverseContact doesn't have an email.")
             elif 'creator' in dataverse:        # Legacy field in older Dataverse versions
-                new_user = dataverse['creator']
-                self.logger.debug("Adding creator of dataverse: %s", dataverse['creator'])
+                new_user = dataverse['contact']
+                self.logger.debug("Adding contact of dataverse: %s", dataverse['contact'])
             else:
-                self.logger.warn("Dataverse creator was empty.")
+                self.logger.warn("Dataverse contact was empty.")
         else:
             self.logger.warn("Dataverse was empty.")
 

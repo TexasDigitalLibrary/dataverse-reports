@@ -81,10 +81,10 @@ def main():
 
     # Dataverse fieldnames for CSV reports
     root_fieldnames = ['alias', 'name', 'id', 'affiliation', 'dataverseType', 'creationDate']
-    creator_fieldnames = ['creatorIdentifier', 'creatorFirstName', 'creatorLastName', 'creatorEmail', 'creatorAffiliation', 'creatorRoles']
+    contact_fieldnames = ['contactIdentifier', 'contactFirstName', 'contactLastName', 'contactEmail', 'contactAffiliation', 'contactRoles']
     files_fieldnames = ['contentSize (MB)']
     sword_fieldnames = ['released']
-    dataverse_fieldnames = root_fieldnames + creator_fieldnames + files_fieldnames + sword_fieldnames
+    dataverse_fieldnames = root_fieldnames + contact_fieldnames + files_fieldnames + sword_fieldnames
 
     # Dataset fieldnames for CSV reports
     root_fieldnames = ['dataverse', 'id', 'identifier', 'persistentUrl', 'protocol', 'authority', 'publisher', 'publicationDate']
@@ -98,8 +98,7 @@ def main():
     dataset_fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_fieldnames + dataset_metrics_fieldnames
 
     # User fieldnames for CSV reports
-    creator_fieldnames = ['id', 'userIdentifier', 'firstName', 'lastName', 'email', 'affiliation', 'position', 'isSuperuser', 'roles', 'createdTime', 'lastLoginTime']
-    user_fieldnames = creator_fieldnames
+    user_fieldnames = ['id', 'userIdentifier', 'firstName', 'lastName', 'email', 'affiliation', 'position', 'isSuperuser', 'roles', 'createdTime', 'lastLoginTime']
 
     # Create dataverse reports object
     dataverse_reports = DataverseReports(dataverse_api=dataverse_api, config=config)
