@@ -32,13 +32,13 @@ class DatasetReports(object):
 
         self.logger = logging.getLogger('dataverse-reports')
 
-    def report_datasets_recursive(self, account_info):
+    def report_datasets_recursive(self, dataverse_identifier):
         # List of datasets
         datasets = []
 
-        self.logger.info("Begin loading datasets for %s.", account_info['identifier'])
-        self.load_datasets_recursive(datasets, account_info['identifier'])
-        self.logger.info("Finished loading %s datasets for %s", str(len(datasets)), account_info['identifier'])
+        self.logger.info("Begin loading datasets for %s.", dataverse_identifier)
+        self.load_datasets_recursive(datasets, dataverse_identifier)
+        self.logger.info("Finished loading %s datasets for %s", str(len(datasets)), dataverse_identifier)
 
         return datasets
 
@@ -64,16 +64,17 @@ class DatasetReports(object):
                 if dvObject['type'] == 'dataset':
                     # Add dataset to this dataverse
                     self.logger.info("Adding dataset %s to dataverse %s.", str(dvObject['id']), str(dataverse_identifier))
-                    self.add_dataset(datasets, dataverse_identifier, dvObject['id'])
+                    self.add_dataset(datasets, dataverse_identifier, dvObject['id'], dvObject['identifier'])
                 if dvObject['type'] == 'dataverse':
                     self.logger.info("Found new dataverse %s.", str(dvObject['id']))
                     self.load_datasets_recursive(datasets, dvObject['id'])
         else:
             self.logger.warn("Dataverse was empty.")
 
-    def add_dataset(self, datasets, dataverse_identifier, dataset_id):
+    def add_dataset(self, datasets, dataverse_identifier, dataset_id, dataset_identifier):
         # Load dataset
         self.logger.info("Dataset id: %s", dataset_id)
+        self.logger.info("Dataset identifier: %s", dataset_identifier)
         dataset_response = self.dataverse_api.get_dataset(identifier=dataset_id)
         response_json = dataset_response.json()
         if 'data' in response_json:
@@ -103,6 +104,20 @@ class DatasetReports(object):
                 # Remove nested information
                 dataset.pop('latestVersion')
 
+            if (self.config['include_dataset_metrics']):
+                # Use Make Data Count endpoints to gather views and downloads statistics
+                dataset_metrics_options = ['viewsUnique', 'viewsTotal', 'downloadsUnique', 'downloadsTotal']
+                for dataset_metrics_option in dataset_metrics_options:
+                    self.logger.debug("Calling endpoint for dataset metric: " + dataset_metrics_option)
+                    dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier)
+                    dataset_metrics_json = dataset_metrics_response.json()
+                    if dataset_metrics_json['status'] == 'OK' and dataset_metrics_option in dataset_metrics_json['data']:                        
+                        self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_json['data'][dataset_metrics_option]))
+                        dataset[dataset_metrics_option] = dataset_metrics_json['data'][dataset_metrics_option]
+                    else:
+                        self.logger.debug("Call was unsuccessfull.")
+                        dataset[dataset_metrics_option] = 0
+
             # Use dataverse_database to retrieve cumulative download count of file in this dataset
             download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
             self.logger.info("Download count for dataset: %s", str(download_count))
@@ -110,15 +125,21 @@ class DatasetReports(object):
 
             if 'files' in dataset:
                 contentSize = 0
+                count_restricted = 0
                 files = dataset['files']
                 for file in files:
                     if 'dataFile' in file:
+                        if file['restricted']:
+                            count_restricted += 1
                         dataFile = file['dataFile']
                         filesize = int(dataFile['filesize'])
                         contentSize += filesize
                 self.logger.info('Totel size (bytes) of all files in this dataset: %s', str(contentSize))
                 # Convert to megabytes for reports
                 dataset['contentSize (MB)'] = (contentSize/1048576)
+
+                dataset['totalFiles'] = len(files)
+                dataset['totalRestrictedFiles'] = count_restricted
 
             # Retrieve dataverse to get alias
             dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)

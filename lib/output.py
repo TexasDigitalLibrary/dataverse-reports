@@ -55,7 +55,7 @@ class Output(object):
             if len(filename_parts) == 2:
                 workbook_name = filename_parts[1]
             else:
-                workbook_name = ''
+                workbook_name = filename
 
             worksheet = workbook.add_worksheet(workbook_name)
             with open(worksheet_file, 'rt', encoding='utf8') as f:

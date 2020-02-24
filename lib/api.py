@@ -68,6 +68,19 @@ class DataverseApi(object):
         response_json = response.json()
         return response_json['data']
 
+    def get_dataverse_size(self, identifier='', includeCached=False):
+        if identifier is None:
+            self.logger.error("Must specify identifer.")
+            return
+
+        url = self.host + 'api/' + self.version + '/dataverses/' + str(identifier) + '/storagesize'
+        if includeCached is True:
+            url += '?includeCache=true'
+        self.logger.debug("Retrieving dataverse storage size: %s", url)
+        response = requests.get(url, headers=self.headers)
+        self.logger.debug("Return status: %s", str(response.status_code))
+        return response
+
     def sword_get_dataverse(self, alias=''):
         if alias is None:
             self.logger.error("Must specify an alias.")
@@ -91,6 +104,24 @@ class DataverseApi(object):
         response = requests.get(url, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))
         return response
+
+    def get_dataset_metric(self, identifier='', option='', doi=''):
+        if identifier is None or option is None or doi is None:
+            self.logger.error("Must specify an identifer, option and DOI.")
+            return
+
+        url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/makeDataCount/' + str(option) + '?persistentId=' + doi
+        self.logger.debug("Retrieving dataset_metric: %s", url)
+        response = requests.get(url, headers=self.headers)
+        self.logger.debug("Return status: %s", str(response.status_code))        
+        return response
+
+    def get_admin_list_users(self, page=1):
+        url = self.host + 'api/' + self.version + '/admin/list-users/?selectedPage=' + str(page)
+        self.logger.debug("Retrieving users list: %s", url)
+        response = requests.get(url, headers=self.headers)
+        self.logger.debug("Return status: %s", str(response.status_code))
+        return response.json()
 
     def construct_parameters(self, params={}):
         parameters = ''

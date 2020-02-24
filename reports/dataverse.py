@@ -2,11 +2,14 @@ import os
 import sys
 import csv
 import pprint
+import re
 import smtplib
 import mimetypes
 import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+from .user import UserReports
 
 class DataverseReports(object):
     def __init__(self, dataverse_api=None, config=None):
@@ -19,6 +22,12 @@ class DataverseReports(object):
             return
 
         self.dataverse_api = dataverse_api
+        self.config = config
+        self.dataverse_size_pattern = re.compile('dataverse:\s(.*)\sbyte')
+        self.logger = logging.getLogger('dataverse-reports')
+
+        # Create UserReports object to retrieve user metadata
+        self.user_reports = UserReports(dataverse_api=dataverse_api, config=config)
 
         # Ensure trailing slash on work_dir
         if config['work_dir'][len(config['work_dir'])-1] != '/':
@@ -28,15 +37,12 @@ class DataverseReports(object):
         self.ns = {'atom': 'http://www.w3.org/2005/Atom',
                     'sword': 'http://purl.org/net/sword/terms/state'}
 
-        self.config = config
-        self.logger = logging.getLogger('dataverse-reports')
-
-    def report_dataverses_recursive(self, account_info):
+    def report_dataverses_recursive(self, dataverse_identifier):
         # List of dataverses
         dataverses = []
 
         # Load dataverses
-        self.load_dataverses_recursive(dataverses, account_info['identifier'])
+        self.load_dataverses_recursive(dataverses, dataverse_identifier)
 
         return dataverses
 
@@ -64,21 +70,71 @@ class DataverseReports(object):
 
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
-            # Flatten the nested creator information
-            if 'creator' in dataverse:
+            # Flatten the nested contact information
+            if 'dataverseContacts' in dataverse:
+                dataverseContacts = dataverse['dataverseContacts']
+                if len(dataverseContacts) > 0:
+                    self.logger.debug("The dataverseContacts list contains " + str(len(dataverseContacts)) + " contacts.")
+                    dataverseContact = dataverseContacts[0]
+                    if 'contactEmail' in dataverseContact:
+                        contactEmail = dataverseContact['contactEmail'].strip()
+                        self.logger.debug("Found email of dataverse contact: %s", str(contactEmail))
+                        user = self.user_reports.find_user_email(contactEmail)
+                        if bool(user):
+                            self.logger.debug("Adding contact information: %s", user)
+                            if 'userIdentifier' in user:
+                                dataverse['contactIdentifier'] = user['userIdentifier']
+                            if 'firstName' in user:
+                                dataverse['contactFirstName'] = user['firstName']
+                            if 'lastName' in user:
+                                dataverse['contactLastName'] = user['lastName']
+                            if 'email' in user:
+                                dataverse['contactEmail'] = user['email']
+                            if 'affiliation' in user:
+                                dataverse['contactAffiliation'] = user['affiliation']
+                            if 'roles' in user:
+                                dataverse['contactRoles'] = user['roles']
+                        else:
+                            self.logger.warn("Unable to find user from dataverseContact email: " + contactEmail)
+                            dataverse['contactEmail'] = contactEmail
+                    else:
+                        self.logger.warn("First dataverseContact doesn't have an email.")
+                else:
+                    self.logger.warn("List of dataverseContacts is empty.")
+            elif 'creator' in dataverse:        # Legacy field in older Dataverse versions
                 self.logger.debug("Replacing creator array.")
                 creator = dataverse['creator']
                 if 'identifier' in creator:
-                    dataverse['creatorIdentifier'] = creator['identifier']
+                    dataverse['contactIdentifier'] = creator['identifier']
                 if 'displayName' in creator:
-                    dataverse['creatorName'] = creator['displayName']
+                    dataverse['contactName'] = creator['displayName']
                 if 'email' in creator:
-                    dataverse['creatorEmail'] = creator['email']
+                    dataverse['contactEmail'] = creator['email']
                 if 'affiliation' in creator:
-                    dataverse['creatorAffiliation'] = creator['affiliation']
+                    dataverse['contactAffiliation'] = creator['affiliation']
                 if 'position' in creator:
-                    dataverse['creatorPosition'] = creator['position']
+                    dataverse['contactPosition'] = creator['position']
                 dataverse.pop('creator')
+            else:
+                self.logger.warn("Unable to find dataverse contact information.")
+
+            # Add the data (file) size of the dataverse and all its sub-dataverses
+            dataverse_size_response = self.dataverse_api.get_dataverse_size(identifier=dataverse_identifier, includeCached=True)
+            response_size_json = dataverse_size_response.json()
+            if response_size_json['status'] == 'OK' and 'data' in response_size_json:
+                dataverse_size = response_size_json['data']
+                if 'message' in dataverse_size:
+                    size_message = dataverse_size['message']
+                    self.logger.debug("The message element from storagesize endpoint: " + size_message)
+                    size_bytes_match = re.search(self.dataverse_size_pattern, size_message)
+                    if size_bytes_match is not None:
+                        size_bytes_string = size_bytes_match.group(1)
+                        size_bytes = int(size_bytes_string.replace(',',''))
+                        dataverse['contentSize (MB)'] = (size_bytes/1048576)
+                    else:
+                        self.logger.warning("Unable to find the bytes value in the message.")
+                else:
+                    self.logger.warning("No message element in response from storagesize endpoint.")
 
             # Add the 'dataverseHasBeenReleased' field from the Sword API
             if 'alias' in dataverse:
@@ -93,6 +149,12 @@ class DataverseReports(object):
                         dataverse['released'] = 'No'
                 else:
                     self.logger.debug("Element 'dataverseHasBeenReleased' is not present in XML.")
+
+            # Load datasets
+            #dataverse_contents = self.dataverse_api.get_dataverse_contents(identifier=dataverse_identifier)
+            #for dvObject in dataverse_contents:
+                #if dvObject['type'] == 'dataset':
+                    #self.load_dataset(dataverse, dvObject['id']) 
 
             dataverses.append(dataverse)
         else:
