@@ -1,12 +1,4 @@
-import os
-import sys
-import csv
-import pprint
-import smtplib
-import mimetypes
 import logging
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 
 class UserReports(object):

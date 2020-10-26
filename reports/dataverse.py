@@ -1,15 +1,8 @@
-import os
-import sys
-import csv
-import pprint
 import re
-import smtplib
-import mimetypes
 import logging
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 from .user import UserReports
+
 
 class DataverseReports(object):
     def __init__(self, dataverse_api=None, config=None):

@@ -1,14 +1,8 @@
 import os
 import sys
-import json
 import yaml
-import csv
-import pprint
-import smtplib
 import logging
-import mimetypes
 from optparse import OptionParser
-from email.message import EmailMessage
 
 from lib.api import DataverseApi
 from lib.database import DataverseDatabase
