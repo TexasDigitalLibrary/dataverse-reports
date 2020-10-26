@@ -254,11 +254,11 @@ def main():
             user_report_file = output.save_report_csv_file(output_file_path=work_dir + 'users.csv', headers=user_fieldnames, data=user_report)
             csv_reports.append(user_report_file)
 
+        # Store list of Excel report(s)
+        excel_reports = []
+
         # Combine CSV report(s) to an Excel spreadsheet
         if len(csv_reports) > 0:
-            # Store list of Excel report(s)
-            excel_reports = []
-
             output_file_path = output_dir +  'dataverse-reports.xlsx'
             excel_report_file = output.save_report_excel_file(output_file_path=output_file_path, worksheet_files=csv_reports)
             if excel_report_file:
