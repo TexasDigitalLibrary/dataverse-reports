@@ -1,6 +1,7 @@
 import psycopg2
 import logging
 
+
 class DataverseDatabase(object):
     def __init__(self, host=None, database=None, username=None, password=None):
         self.conn = None
