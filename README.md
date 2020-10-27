@@ -45,17 +45,14 @@ Set parameters for API and database connections. Accounts list refers to top-lev
 NOTE: The accounts section can be left blank if your Dataverse instance is not set up with separate institutions as top-level dataverses. In that case, your reports will be for everything from the root dataverse on down and sent to all admins.
 
 
-Virtual Environment Setup
+Python 3.8+ Virtual Environment Setup
 -----
 ```bash
-pip install virtualenv
-virtualenv -p python3 venv
+python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+pip install pipenv
+pipenv install
 ```
-
-NOTE: In some Linux environments pip will not install the underlying requirements for psycopg2 and PyYAML. If you see errors related to these packages at runtime, then run `easy_install psycopg2` and `easy_install PyYAML`.
-
 
 Usage
 -----
