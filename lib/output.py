@@ -44,7 +44,7 @@ class Output(object):
 
         # Create Excel workbook
         self.logger.info("Creating Excel file: %s", output_file_path)
-        workbook = xlsxwriter.Workbook(output_file_path)
+        workbook = xlsxwriter.Workbook(output_file_path, {'strings_to_numbers': True})
 
         # Add worksheet(s)
         for worksheet_file in worksheet_files:
