@@ -101,10 +101,10 @@ class DatasetReports(object):
                 last_month = self.get_last_month()
 
                 # Use Make Data Count endpoints to gather views and downloads statistics
-                dataset_metrics_options = ['viewsUnique', 'viewsPreviousMonth', 'viewsTotal', 'downloadsUnique', 'downloadsPreviousMonth', 'downloadsTotal']
+                dataset_metrics_options = ['viewsUnique', 'viewsMonth', 'viewsTotal', 'downloadsUnique', 'downloadsMonth', 'downloadsTotal']
                 for dataset_metrics_option in dataset_metrics_options:
                     self.logger.debug("Calling endpoint for dataset metric: " + dataset_metrics_option)
-                    if dataset_metrics_option == 'viewsPreviousMonth' or dataset_metrics_option == 'downloadsPreviousMonth':
+                    if dataset_metrics_option == 'viewsMonth' or dataset_metrics_option == 'downloadsMonth':
                         dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier,date=last_month)
                     else:
                         dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier)
