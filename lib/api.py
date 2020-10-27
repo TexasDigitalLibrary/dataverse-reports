@@ -105,12 +105,17 @@ class DataverseApi(object):
         self.logger.debug("Return status: %s", str(response.status_code))
         return response
 
-    def get_dataset_metric(self, identifier='', option='', doi=''):
+    def get_dataset_metric(self, identifier='', option='', doi='', date=None):
         if identifier is None or option is None or doi is None:
             self.logger.error("Must specify an identifer, option and DOI.")
             return
 
-        url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/makeDataCount/' + str(option) + '?persistentId=' + doi
+        # Include date parameter if specified
+        if date is not None:
+            url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/makeDataCount/' + str(option) + '/' + date + '?persistentId=' + doi
+        else:
+            url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/makeDataCount/' + str(option) + '?persistentId=' + doi
+
         self.logger.debug("Retrieving dataset_metric: %s", url)
         response = requests.get(url, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))        

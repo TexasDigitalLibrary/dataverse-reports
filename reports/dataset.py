@@ -1,5 +1,5 @@
 import logging
-
+import datetime
 
 class DatasetReports(object):
     def __init__(self, dataverse_api=None, dataverse_database=None, config=None):
@@ -97,11 +97,18 @@ class DatasetReports(object):
                 dataset.pop('latestVersion')
 
             if (self.config['include_dataset_metrics']):
+                # Calculate previous month
+                last_month = self.get_last_month()
+
                 # Use Make Data Count endpoints to gather views and downloads statistics
-                dataset_metrics_options = ['viewsUnique', 'viewsTotal', 'downloadsUnique', 'downloadsTotal']
+                dataset_metrics_options = ['viewsUnique', 'viewsPreviousMonth', 'viewsTotal', 'downloadsUnique', 'downloadsPreviousMonth', 'downloadsTotal']
                 for dataset_metrics_option in dataset_metrics_options:
                     self.logger.debug("Calling endpoint for dataset metric: " + dataset_metrics_option)
-                    dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier)
+                    if dataset_metrics_option == 'viewsPreviousMonth' or dataset_metrics_option == 'downloadsPreviousMonth':
+                        dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier,date=last_month)
+                    else:
+                        dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier)
+                        
                     dataset_metrics_json = dataset_metrics_response.json()
                     if dataset_metrics_json['status'] == 'OK' and dataset_metrics_option in dataset_metrics_json['data']:                        
                         self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_json['data'][dataset_metrics_option]))
@@ -230,3 +237,9 @@ class DatasetReports(object):
                 return valuesString
             else:
                 self.logger.debug("Unrecognized typeClass: %s", field['typeClass'])
+
+    def get_last_month(self):
+        now = datetime.datetime.now()
+        previous = now.date().replace(day=1) - datetime.timedelta(days=1)
+        last_month = previous.strftime("%Y-%m")
+        return last_month

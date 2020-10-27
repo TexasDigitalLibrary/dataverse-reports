@@ -88,7 +88,7 @@ def main():
     files_fieldnames = ['contentSize (MB)', 'totalFiles', 'totalRestrictedFiles']
     dataset_metrics_fieldnames = []
     if (config['include_dataset_metrics']):
-        dataset_metrics_fieldnames = ['viewsUnique', 'viewsTotal','downloadsUnique', 'downloadsTotal']
+        dataset_metrics_fieldnames = ['viewsUnique', 'viewsPreviousMonth', 'viewsTotal','downloadsUnique', 'downloadsPreviousMonth', 'downloadsTotal']
     dataset_fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_fieldnames + dataset_metrics_fieldnames
 
     # User fieldnames for CSV reports
