@@ -45,7 +45,7 @@ Set parameters for API and database connections. Accounts list refers to top-lev
 NOTE: The accounts section can be left blank if your Dataverse instance is not set up with separate institutions as top-level dataverses. In that case, your reports will be for everything from the root dataverse on down and sent to all admins.
 
 
-Python 3.8+ Virtual Environment Setup
+Python 3 Virtual Environment Setup
 -----
 ```bash
 python3 -m venv venv
