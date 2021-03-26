@@ -1,16 +1,31 @@
 # dataverse-reports
-A python3-based tool to generate and email statistical reports from Dataverse (https://dataverse.org/) using the native API and database queries.
 
-As with Miniverse (https://github.com/IQSS/miniverse), the reports require access to the Dataverse database.
+A python3-based tool to generate and email statistical reports from [Dataverse](https://dataverse.org/) using the native API and database queries.
 
-Configuration
------
+As with [Miniverse](https://github.com/IQSS/miniverse), the reports require access to the Dataverse database.
+
+## Requirements
+
+- Python 3.6+
+- Dataverse 5.1+
+
+## Python 3 Virtual Environment Setup
 
 ```bash
-$ cp config/application.yml.sample config/application.yml
+python3 -m venv venv
+source venv/bin/activate
+pip install pipenv
+pipenv install
 ```
 
-Example
+## Configuration
+
+```bash
+cp config/application.yml.sample config/application.yml
+```
+
+### Example
+
 ```yaml
 dataverse_api_host: ''
 dataverse_api_key: ''
@@ -44,18 +59,10 @@ Set parameters for API and database connections. Accounts list refers to top-lev
 
 NOTE: The accounts section can be left blank if your Dataverse instance is not set up with separate institutions as top-level dataverses. In that case, your reports will be for everything from the root dataverse on down and sent to all admins.
 
+## Usage
 
-Python 3 Virtual Environment Setup
------
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install pipenv
-pipenv install
-```
+**NOTE: All of the following commands assume that the user is in the virtual environment.**
 
-Usage
------
 ```bash
 Usage: run.py [options]
 
@@ -73,30 +80,28 @@ Options:
   -e, --email           Email reports to liaisons?
 ```
 
-<h5>Launch virtual environment</h5>
+### Sample commands
+
+- Generate and email a report of all dataverses, datasets and users for super admin(s).
 
 ```bash
-$ source venv/bin/activate
+python run.py -c config/application.yml -r all -g all -o $HOME/reports -e
 ```
 
-<h5>Sample commands run inside the virtual environment.</h5>
+- Generate and email reports of dataverses for each institution beginning at a top-level dataverse.
 
-Generate and email a report of all dataverses, datasets and users for super admin(s).
 ```bash
-$ python run.py -c config/application.yml -r all -g all -o $HOME/reports -e
+python run.py -c config/application.yml -r dataverse -g institutions -o $HOME/reports -e
 ```
 
-Generate and email reports of dataverses for each institution beginning at a top-level dataverse.
+- Generate and email a report of all datasets for super admin(s).
+
 ```bash
-$ python run.py -c config/application.yml -r dataverse -g institutions -o $HOME/reports -e
+python run.py -c config/application.yml -r dataset -g all -o $HOME/reports -e
 ```
 
-Generate and email a report of all datasets for super admin(s).
-```bash
-$ python run.py -c config/application.yml -r dataset -g all -o $HOME/reports -e
-```
+- Generate and email reports of users for each institution beginning at a top-level dataverse.
 
-Generate and email reports of users for each institution beginning at a top-level dataverse.
 ```bash
-$ python run.py -c config/application.yml -r user -g institutions -o $HOME/reports -e
+python run.py -c config/application.yml -r user -g institutions -o $HOME/reports -e
 ```
