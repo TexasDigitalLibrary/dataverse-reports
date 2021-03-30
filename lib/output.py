@@ -58,6 +58,7 @@ class Output(object):
                 workbook_name = filename
 
             worksheet = workbook.add_worksheet(workbook_name)
+            worksheet.freeze_panes(1, 0)
             with open(worksheet_file, 'rt', encoding='utf8') as f:
                 reader = csv.reader(f)
                 for r, row in enumerate(reader):
