@@ -184,33 +184,26 @@ class DatasetReports(object):
                 self.logger.debug("New value of valuesString: %s", str(valuesString))
                 return valuesString
             elif field['typeClass'] == 'compound':
+                self.logger.debug("Looking at single compound field...")
                 subValue = ''
                 if isinstance(field['value'], list):
                     for value in field['value']:
-                        if isinstance(value, str):
-                            self.logger.debug("Value: %s", value)
-                        for key, elements in value.items():
-                            if not elements['multiple']:
-                                subValue += elements['value']
-                            else:
-                                subValue += self.get_value_recursive(valuesString, subValue, elements['value'])
-
-                            self.logger.debug("New subValue: %s", subValue)
-                            subValue += " - "
-
-                        valuesString += subValue + " ; "
+                        compoundValue = self.create_compound_value(value)
+                        if compoundValue.endswith(' - '):
+                            compoundValue = compoundValue[:-len(' - ')]
+                        self.logger.debug("New compoundValue: %s", compoundValue)
+                    
+                        valuesString += compoundValue + " ; "
                 else:
+                    self.logger.debug("Compound field has single value")
                     value = field['value']
-                    for key, elements in value.items():
-                        if not elements['multiple']:
-                            subValue += elements['value']
-                        else:
-                            subValue += self.get_value_recursive(valuesString, subValue, elements['value'])
 
-                        self.logger.debug("New subValue: %s", subValue)
-                        subValue += " - "
-
-                    valuesString += subValue + " ; "
+                    compoundValue = self.create_compound_value(value)
+                    if compoundValue.endswith(' - '):
+                        compoundValue = compoundValue[:-len(' - ')]
+                    self.logger.debug("New compoundValue: %s", compoundValue)
+                    
+                    valuesString += compoundValue + " ; "
 
                 if valuesString.endswith(' ; '):
                     valuesString = valuesString[:-len(' ; ')]
@@ -236,33 +229,26 @@ class DatasetReports(object):
                 self.logger.debug("New value of valuesString: %s", str(valuesString))
                 return valuesString
             elif field['typeClass'] == 'compound':
-                subValue = ''
+                self.logger.debug("Looking at multiple compound field...")
+                compoundValue = ''
                 if isinstance(field['value'], list):
                     for value in field['value']:
-                        if isinstance(value, str):
-                            self.logger.debug("Value: %s", value)
-                        for key, elements in value.items():
-                            if not elements['multiple']:
-                                subValue += elements['value']
-                            else:
-                                subValue += self.get_value_recursive(valuesString, subValue, elements['value'])
-
-                            self.logger.debug("New subValue: %s", subValue)
-                            subValue += " - "
-
-                        valuesString += subValue + " ; "
+                        compoundValue = self.create_compound_value(value)
+                        if compoundValue.endswith(' - '):
+                            compoundValue = compoundValue[:-len(' - ')]
+                        self.logger.debug("New compoundValue: %s", compoundValue)
+                    
+                        valuesString += compoundValue + " ; "
                 else:
+                    self.logger.debug("Compound field has single value")
                     value = field['value']
-                    for key, elements in value.items():
-                        if not elements['multiple']:
-                            subValue += elements['value']
-                        else:
-                            subValue += self.get_value_recursive(valuesString, subValue, elements['value'])
 
-                        self.logger.debug("New subValue: %s", subValue)
-                        subValue += " - "
-
-                    valuesString += subValue + " ; "
+                    compoundValue = self.create_compound_value(value)
+                    if compoundValue.endswith(' - '):
+                        compoundValue = compoundValue[:-len(' - ')]
+                    self.logger.debug("New compoundValue: %s", compoundValue)
+                    
+                    valuesString += compoundValue + " ; "
 
                 if valuesString.endswith(' ; '):
                     valuesString = valuesString[:-len(' ; ')]
@@ -270,6 +256,24 @@ class DatasetReports(object):
                 return valuesString
             else:
                 self.logger.debug("Unrecognized typeClass: %s", field['typeClass'])
+
+    def create_compound_value(self, fields):
+        self.logger.debug("Creating compound string...")
+
+        compoundValue = ''
+        for key, elements in fields.items():
+            if isinstance(elements['value'], str):
+                compoundValue += elements['value'] + " - "
+            else:
+                self.logger.error("Compound object contains field with mulitple values.")
+
+            self.logger.info("New compound value: %s", compoundValue)
+
+        if compoundValue.endswith(' - '):
+            compoundValue = compoundValue[:-len(' - ')]
+
+        self.logger.debug("Final compound string: " + compoundValue)
+        return compoundValue
 
     def get_last_month(self):
         now = datetime.datetime.now()
