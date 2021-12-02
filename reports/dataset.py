@@ -237,9 +237,23 @@ class DatasetReports(object):
                 return valuesString
             elif field['typeClass'] == 'compound':
                 subValue = ''
-                for value in field['value']:
+                if isinstance(field['value'], list):
+                    for value in field['value']:
+                        if isinstance(value, str):
+                            self.logger.debug("Value: %s", value)
+                        for key, elements in value.items():
+                            if not elements['multiple']:
+                                subValue += elements['value']
+                            else:
+                                subValue += self.get_value_recursive(valuesString, subValue, elements['value'])
+
+                            self.logger.debug("New subValue: %s", subValue)
+                            subValue += " - "
+
+                        valuesString += subValue + " ; "
+                else:
+                    value = field['value']
                     for key, elements in value.items():
-                        self.logger.debug("Key: %s", key)
                         if not elements['multiple']:
                             subValue += elements['value']
                         else:
@@ -248,9 +262,10 @@ class DatasetReports(object):
                         self.logger.debug("New subValue: %s", subValue)
                         subValue += " - "
 
-                    subValue = subValue[:-3]
                     valuesString += subValue + " ; "
 
+                if valuesString.endswith(' ; '):
+                    valuesString = valuesString[:-len(' ; ')]
                 self.logger.debug("New value of valuesString: %s", str(valuesString))
                 return valuesString
             else:
