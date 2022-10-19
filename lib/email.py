@@ -74,7 +74,20 @@ class Email(object):
             part.add_header('Content-Disposition', "attachment; filename= %s" % report_file_name)
             message.attach(part)
 
+
+        # Get SMTP configuration 
+        smtp_host = self.config['smtp_host']
+        smtp_auth = self.config['smtp_auth']
+        smtp_port = self.config['smtp_port']
+        smtp_username = self.config['smtp_username']
+        smtp_password = self.config['smtp_password']
+
         # Send email
-        self.logger.info("Sending dataverse report to %s.", to_email)
-        with smtplib.SMTP('localhost') as s:
-            s.send_message(message)
+        self.logger.info('Sending Dataverse report to {email}.'.format(email=to_email))
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        if smtp_auth == 'tls':
+            server.starttls()
+        if smtp_username and smtp_password:
+            server.login(smtp_username, smtp_password)
+        server.send_message(message)
+        server.quit()
