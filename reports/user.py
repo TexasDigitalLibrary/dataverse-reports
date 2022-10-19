@@ -53,7 +53,7 @@ class UserReports(object):
         user = {}
 
         for u in self.all_users:
-            if email == u['email']:
+            if 'email' in u and email.casefold() == u['email'].casefold():
                 user = u
 
         return user
