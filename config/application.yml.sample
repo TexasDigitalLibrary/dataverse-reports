@@ -10,8 +10,8 @@ log_path: 'logs'
 log_file: 'dataverse-reports.log'
 log_level: 'INFO'
 smtp_host: 'localhost'
-smtp_auth: 'tls'
-smtp_port: 587
+smtp_auth: ''
+smtp_port: 25
 smtp_username: 'username'
 smtp_password: 'password'
 from_email: ''
