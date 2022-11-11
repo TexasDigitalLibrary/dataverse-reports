@@ -52,8 +52,10 @@ class UserReports(object):
     def find_user_email(self, email):
         user = {}
 
+        email_lower = email.casefold()
+
         for u in self.all_users:
-            if email == u['email']:
+            if 'email' in u and email_lower == u['email'].casefold():
                 user = u
 
         return user

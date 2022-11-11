@@ -8,7 +8,7 @@ install_requires = ['dataverse-client-python']
 
 setup(
     name = 'dataverse-reports',
-    version='1.3.0',
+    version='1.4.0',
     url = 'https://www.tdl.org/',
     author = 'Nicholas Woodward',
     author_email = 'njw@austin.utexas.edu',

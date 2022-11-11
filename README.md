@@ -36,6 +36,11 @@ work_dir: '/tmp'
 log_path: 'logs'
 log_file: 'dataverse-reports.log'
 log_level: 'INFO'
+smtp_host: 'localhost'
+smtp_auth: ''
+smtp_port: 25
+smtp_username: 'username'
+smtp_password: 'password'
 from_email: ''
 admin_emails:
         - email1
@@ -55,7 +60,7 @@ accounts:
                - email1
 ```
 
-Set parameters for API and database connections. Accounts list refers to top-level dataverses on which reports based at the institutional level will begin.
+Set parameters for API and database connections, as well as the SMTP configuration. Accounts list refers to top-level dataverses on which reports based at the institutional level will begin.
 
 NOTE: The accounts section can be left blank if your Dataverse instance is not set up with separate institutions as top-level dataverses. In that case, your reports will be for everything from the root dataverse on down and sent to all admins.
 
