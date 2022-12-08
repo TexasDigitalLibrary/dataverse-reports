@@ -8,7 +8,7 @@ verify_ssl = true
 [packages]
 astroid = "==2.11.5"
 bleach = "==5.0.0"
-certifi = "==2022.9.24"
+certifi = "==2022.12.7"
 chardet = "==4.0.0"
 click = "==8.1.3"
 dataverse = {editable = true, git = "https://github.com/IQSS/dataverse-client-python.git", ref = "5f95a11e2f32bcfabe28e6ad43b2f7edac60d983"}
