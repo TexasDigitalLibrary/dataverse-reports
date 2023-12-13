@@ -138,7 +138,7 @@ class DatasetReports(object):
             # Use dataverse_database to retrieve cumulative download count of file in this dataset
             download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
             self.logger.info("Download count for dataset: %s", str(download_count))
-            dataset['downloadCount'] = download_count
+            dataset['fileDownloads'] = download_count
 
             if 'files' in dataset:
                 contentSize = 0

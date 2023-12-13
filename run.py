@@ -84,7 +84,7 @@ def main():
     root_fieldnames = ['dataverse', 'id', 'identifier', 'persistentUrl', 'protocol', 'authority', 'publisher', 'publicationDate']
     latest_fieldnames = ['versionState', 'lastUpdateTime', 'releaseTime', 'createTime', 'license', 'termsOfUse']
     metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription', 'notesText', 'subject', 'productionDate', 'productionPlace', 'depositor', 'dateOfDeposit']
-    database_fieldnames = ['downloadCount']
+    database_fieldnames = ['fileDownloads']
     files_fieldnames = ['contentSize (MB)', 'totalFiles', 'totalRestrictedFiles']
     dataset_metrics_fieldnames = []
     if (config['include_dataset_metrics']):
