@@ -31,7 +31,7 @@ class DataverseDatabase(object):
             return
 
         cursor = self.conn.cursor()
-        cursor.execute("SELECT COUNT(g.id) FROM guestbookresponse g LEFT JOIN filedownload f on g.id = f.guestbookresponse_id WHERE g.dataset_id = %s;", [str(dataset_id)])
+        cursor.execute("SELECT COUNT(g.id) FROM guestbookresponse g LEFT JOIN fileaccessrequests f on g.id = f.guestbookresponse_id WHERE g.dataset_id = %s;", [str(dataset_id)])
         result = cursor.fetchone()
         count = result[0]
         return count
