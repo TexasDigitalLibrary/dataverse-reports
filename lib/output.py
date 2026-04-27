@@ -1,41 +1,53 @@
+"""Class for output functions"""
+
 import os
 import csv
-import xlsxwriter
 import logging
+import xlsxwriter
 
 
-class Output(object):
+class Output:
+    """Class for output functions"""
+
     def __init__(self, config=None):
         self.config = config
         self.logger = logging.getLogger('dataverse-reports')
 
-    def save_report_csv_file(self, output_file_path=None, headers=[], data=[]):
+    def save_report_csv_file(self, output_file_path=None, headers=None, data=None):
+        """Save report to CSV file"""
+
         # Sanity checks
         if output_file_path is None:
             self.logger.error("Output file path is required.")
             return False
-        if not headers:
+        if headers is None:
             self.logger.error("Report headers are required.")
             return False
         if not self.ensure_directory_exists(output_file_path):
             self.logger.error("Output directory doesn't exist and can't be created.")
             return False
 
-        with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction='ignore', dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
-            writer.writeheader()
-            for result in data:
-                writer.writerow(result)
+        if data is not None:
+            with open(output_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction='ignore',
+                                        dialect='excel', quoting=csv.QUOTE_NONNUMERIC)
+                writer.writeheader()
+                for result in data:
+                    writer.writerow(result)
 
-        self.logger.info("Saved report to CSV file %s.", output_file_path)
-        return output_file_path
+            self.logger.info("Saved report to CSV file %s.", output_file_path)
+            return output_file_path
 
-    def save_report_excel_file(self, output_file_path=None, worksheet_files=[]):
+        return None
+
+    def save_report_excel_file(self, output_file_path=None, worksheet_files=None):
+        """Save report to Excel file"""
+
         # Sanity checks
         if output_file_path is None:
             self.logger.error("Output file path is required.")
             return False
-        if len(worksheet_files) == 0:
+        if worksheet_files is None or len(worksheet_files) == 0:
             self.logger.error("Worksheets files list is empty.")
             return False
         if not self.ensure_directory_exists(output_file_path):
@@ -71,6 +83,8 @@ class Output(object):
         return output_file_path
 
     def ensure_directory_exists(self, output_file_path=None):
+        """Ensure directory exists"""
+
         if output_file_path is None:
             self.logger.warning('Output file path is empty.')
             return False
@@ -79,6 +93,6 @@ class Output(object):
 
         if os.path.isdir(directory) and os.path.exists(directory):
             return True
-        else:
-            os.mkdir(directory)
-            return True
+
+        os.mkdir(directory)
+        return True

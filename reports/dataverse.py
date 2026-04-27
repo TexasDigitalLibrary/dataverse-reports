@@ -1,10 +1,14 @@
+"""Class for dataverse reports"""
+
 import re
 import logging
 
 from .user import UserReports
 
 
-class DataverseReports(object):
+class DataverseReports:
+    """Class for dataverse reports"""
+
     def __init__(self, dataverse_api=None, config=None):
         if dataverse_api is None:
             print('Dataverse API required to create dataverse reports.')
@@ -31,6 +35,8 @@ class DataverseReports(object):
                     'sword': 'http://purl.org/net/sword/terms/state'}
 
     def report_dataverses_recursive(self, dataverse_identifier):
+        """Load all dataverses"""
+
         # List of dataverses
         dataverses = []
 
@@ -39,7 +45,9 @@ class DataverseReports(object):
 
         return dataverses
 
-    def load_dataverses_recursive(self, dataverses=[], dataverse_identifier=None):
+    def load_dataverses_recursive(self, dataverses=None, dataverse_identifier=None):
+        """Load dataverses recursively"""
+
         if dataverse_identifier is None:
             return
 
@@ -48,12 +56,15 @@ class DataverseReports(object):
         self.load_dataverse(dataverses, dataverse_identifier)
 
         # Load child objects
-        dataverse_contents = self.dataverse_api.get_dataverse_contents(identifier=dataverse_identifier)
-        for dvObject in dataverse_contents:
-            if dvObject['type'] == 'dataverse':
-                self.load_dataverses_recursive(dataverses, dvObject['id'])
+        dataverse_contents = self.dataverse_api.get_dataverse_contents(
+            identifier=dataverse_identifier)
+        for dv_object in dataverse_contents:
+            if dv_object['type'] == 'dataverse':
+                self.load_dataverses_recursive(dataverses, dv_object['id'])
 
     def load_dataverse(self, dataverses, dataverse_identifier):
+        """Load dataverse"""
+
         # Load dataverse
         self.logger.info("Dataverse identifier: %s", dataverse_identifier)
         dataverse_response = self.dataverse_api.get_dataverse(identifier=dataverse_identifier)
@@ -64,15 +75,16 @@ class DataverseReports(object):
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
             # Flatten the nested contact information
-            if 'dataverseContacts' in dataverse:
-                dataverseContacts = dataverse['dataverseContacts']
-                if len(dataverseContacts) > 0:
-                    self.logger.debug("The dataverseContacts list contains " + str(len(dataverseContacts)) + " contacts.")
-                    dataverseContact = dataverseContacts[0]
-                    if 'contactEmail' in dataverseContact:
-                        contactEmail = dataverseContact['contactEmail'].strip()
-                        self.logger.debug("Found email of dataverse contact: %s", str(contactEmail))
-                        user = self.user_reports.find_user_email(contactEmail)
+            if 'dataverse_contacts' in dataverse:
+                dataverse_contacts = dataverse['dataverse_contacts']
+                if len(dataverse_contacts) > 0:
+                    self.logger.debug("The dataverse_contacts list contains %s contacts.", str(len(dataverse_contacts)))
+                    dataverse_contact = dataverse_contacts[0]
+                    if 'contact_email' in dataverse_contact:
+                        contact_email = dataverse_contact['contact_email'].strip()
+                        self.logger.debug("Found email of dataverse contact: %s",
+                                          str(contact_email))
+                        user = self.user_reports.find_user_email(contact_email)
                         if bool(user):
                             self.logger.debug("Adding contact information: %s", user)
                             if 'userIdentifier' in user:
@@ -82,18 +94,19 @@ class DataverseReports(object):
                             if 'lastName' in user:
                                 dataverse['contactLastName'] = user['lastName']
                             if 'email' in user:
-                                dataverse['contactEmail'] = user['email']
+                                dataverse['contact_email'] = user['email']
                             if 'affiliation' in user:
                                 dataverse['contactAffiliation'] = user['affiliation']
                             if 'roles' in user:
                                 dataverse['contactRoles'] = user['roles']
                         else:
-                            self.logger.warn("Unable to find user from dataverseContact email: " + contactEmail)
-                            dataverse['contactEmail'] = contactEmail
+                            self.logger.warning("Unable to find user from dataverse_contact email: %s",
+                                                contact_email)
+                            dataverse['contact_email'] = contact_email
                     else:
-                        self.logger.warn("First dataverseContact doesn't have an email.")
+                        self.logger.warning("First dataverse_contact doesn't have an email.")
                 else:
-                    self.logger.warn("List of dataverseContacts is empty.")
+                    self.logger.warning("List of dataverse_contacts is empty.")
             elif 'creator' in dataverse:        # Legacy field in older Dataverse versions
                 self.logger.debug("Replacing creator array.")
                 creator = dataverse['creator']
@@ -102,14 +115,14 @@ class DataverseReports(object):
                 if 'displayName' in creator:
                     dataverse['contactName'] = creator['displayName']
                 if 'email' in creator:
-                    dataverse['contactEmail'] = creator['email']
+                    dataverse['contact_email'] = creator['email']
                 if 'affiliation' in creator:
                     dataverse['contactAffiliation'] = creator['affiliation']
                 if 'position' in creator:
                     dataverse['contactPosition'] = creator['position']
                 dataverse.pop('creator')
             else:
-                self.logger.warn("Unable to find dataverse contact information.")
+                self.logger.warning("Unable to find dataverse contact information.")
 
             # Add the data (file) size of the dataverse and all its sub-dataverses
             dataverse_size_response = self.dataverse_api.get_dataverse_size(identifier=dataverse_identifier, includeCached=True)
@@ -118,7 +131,7 @@ class DataverseReports(object):
                 dataverse_size = response_size_json['data']
                 if 'message' in dataverse_size:
                     size_message = dataverse_size['message']
-                    self.logger.debug("The message element from storagesize endpoint: " + size_message)
+                    self.logger.debug("The message element from storagesize endpoint: %s",  size_message)
                     size_bytes_match = re.search(self.dataverse_size_pattern, size_message)
                     if size_bytes_match is not None:
                         size_bytes_string = size_bytes_match.group(1)
@@ -151,4 +164,4 @@ class DataverseReports(object):
 
             dataverses.append(dataverse)
         else:
-            self.logger.warn("Dataverse was empty.")
+            self.logger.warning("Dataverse was empty.")
