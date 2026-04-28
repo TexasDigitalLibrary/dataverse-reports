@@ -1,10 +1,9 @@
 """Class for communicating with the Dataverse APIs"""
 
-import requests
-import logging
-
-from requests.auth import HTTPBasicAuth
 from xml.etree import ElementTree
+import logging
+import requests
+from requests.auth import HTTPBasicAuth
 
 class DataverseApi:
     """Class for communicating with the Dataverse APIs"""
@@ -21,7 +20,7 @@ class DataverseApi:
             self.host = config['host']
 
         self.token = config['token']
-
+        self.timeout = config['timeout']
         self.version = 'v1'
 
         self.logger = logging.getLogger('dataverse-reports')
@@ -35,7 +34,7 @@ class DataverseApi:
 
         url = self.host + 'api/info/version/'
         self.logger.debug("Testing API connection: %s.", url)
-        response = requests.get(url)
+        response = requests.get(url, timeout=self.timeout)
         if response.status_code == 200:
             return True
 
@@ -56,7 +55,7 @@ class DataverseApi:
             url = self.host + 'api/' + self.version + '/search?q=' + term
 
         self.logger.debug("Searching Dataverse: %s.", url)
-        response = requests.get(url)
+        response = requests.get(url, timeout=self.timeout)
         self.logger.debug("Return status: %s", str(response.status_code))
         return response
 
@@ -69,7 +68,7 @@ class DataverseApi:
 
         url = self.host + 'api/' + self.version + '/dataverses/' + str(identifier)
         self.logger.debug("Retrieving dataverse: %s.", url)
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url, timeout=self.timeout, headers=self.headers)
         self.logger.debug("Return status: %s.", str(response.status_code))
         return response
 
@@ -82,13 +81,13 @@ class DataverseApi:
 
         url = self.host + 'api/' + self.version + '/dataverses/' + str(identifier) + '/contents'
         self.logger.debug("Retrieving dataverse contents: %s", url)
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url, timeout=self.timeout, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))
 
         response_json = response.json()
         return response_json['data']
 
-    def get_dataverse_size(self, identifier='', includeCached=False):
+    def get_dataverse_size(self, identifier='', include_cached=False):
         """Get size of dataverse"""
 
         if identifier is None:
@@ -96,10 +95,10 @@ class DataverseApi:
             return None
 
         url = self.host + 'api/' + self.version + '/dataverses/' + str(identifier) + '/storagesize'
-        if includeCached is True:
+        if include_cached is True:
             url += '?includeCache=true'
         self.logger.debug("Retrieving dataverse storage size: %s", url)
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url, timeout=self.timeout, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))
         return response
 
@@ -112,7 +111,7 @@ class DataverseApi:
 
         url = self.host + '/dvn/api/data-deposit/' + self.version + '/swordv2/collection/dataverse/' + alias
         self.logger.debug("Retrieving SWORD dataverse: %s", url)
-        response = requests.get(url, auth=HTTPBasicAuth(self.token, ''))
+        response = requests.get(url, timeout=self.timeout, auth=HTTPBasicAuth(self.token, ''))
         self.logger.debug("Return status: %s", str(response.status_code))
 
         tree = ElementTree.fromstring(response.content)
@@ -127,7 +126,7 @@ class DataverseApi:
 
         url = self.host + 'api/' + self.version + '/datasets/' + str(identifier)
         self.logger.debug("Retrieving dataset: %s", url)
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url, timeout=self.timeout, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))
         return response
 
@@ -145,7 +144,7 @@ class DataverseApi:
             url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/makeDataCount/' + str(option) + '?persistentId=' + doi
 
         self.logger.debug("Retrieving dataset_metric: %s", url)
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url, timeout=self.timeout, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))        
         return response
 
@@ -154,7 +153,7 @@ class DataverseApi:
 
         url = self.host + 'api/' + self.version + '/admin/list-users/?selectedPage=' + str(page)
         self.logger.debug("Retrieving users list: %s", url)
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url, timeout=self.timeout, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))
         return response.json()
 
@@ -178,11 +177,11 @@ class DataverseApi:
         """Make call to Dataverse API"""
 
         if http_type == 'GET':
-            r = requests.get(url, headers=self.headers)
+            r = requests.get(url, timeout=self.timeout, headers=self.headers)
         elif http_type == 'POST':
-            r = requests.put(url, headers=self.headers)
+            r = requests.put(url, timeout=self.timeout, headers=self.headers)
         else:
-            r = requests.get(url, headers=self.headers)
+            r = requests.get(url, timeout=self.timeout, headers=self.headers)
 
         return r.json
 

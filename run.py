@@ -5,12 +5,11 @@ import os
 import sys
 import logging
 import yaml
-from optparse import OptionParser
 
-from lib.api import DataverseApi
-from lib.database import DataverseDatabase
-from lib.output import Output
-from lib.email import Email
+from lib.dataverse_api import DataverseApi
+from lib.dataverse_database import DataverseDatabase
+from lib.dataverse_email import DataverseEmail
+from lib.dataverse_output import DataverseOutput
 
 from reports.dataverse import DataverseReports
 from reports.dataset import DatasetReports
@@ -84,7 +83,7 @@ def main():
 
     # Create Dataverse database object and test the connection
     dataverse_database = DataverseDatabase(config=config['database'])
-    if dataverse_database.create_connection() is False:
+    if dataverse_database is None:
         logger.error("Cannot create reports because the connection to the"
                      " Dataverse database failed.")
         sys.exit(0)
@@ -131,10 +130,10 @@ def main():
     user_reports = UserReports(dataverse_api=dataverse_api, config=config)
 
     # Create output object
-    output = Output(config=config)
+    output = DataverseOutput(config=config)
 
     # Create email object
-    email = Email(config=config)
+    email = DataverseEmail(config=config)
 
     # Start reports
     logger.info("Started creating reports...")

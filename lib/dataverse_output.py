@@ -6,7 +6,7 @@ import logging
 import xlsxwriter
 
 
-class Output:
+class DataverseOutput:
     """Class for output functions"""
 
     def __init__(self, config=None):

@@ -3,13 +3,12 @@
 import os
 import smtplib
 import logging
+from email import encoders
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
-from email import encoders
 
-
-class Email:
+class DataverseEmail:
     """Class for email functions"""
 
     def __init__(self, config=None):

@@ -2,6 +2,7 @@ dataverse_name: 'My data repository'
 api:
      host: 'http://localhost:8080'
      key: 'sample_key'
+     timeout: 60
 database:
      host: 'localhost'
      name: 'dataverse'
