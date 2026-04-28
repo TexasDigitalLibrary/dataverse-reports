@@ -1,10 +1,11 @@
 dataverse_name: 'My data repository'
 api:
      host: 'http://localhost:8080'
-     key: 'sample_key'
+     token: 'sample_key'
      timeout: 60
 database:
      host: 'localhost'
+     port: 5432
      name: 'dataverse'
      username: 'db_user'
      password: 'db_password'
