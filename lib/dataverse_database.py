@@ -16,7 +16,7 @@ class DataverseDatabase(object):
         self._connection_string = f"dbname={config['name']} user={config['username']} password={config['password']} host={config['host']} port={config['port']}"
 
         # Debug information
-        self.logger.info("Attempting to connect to Dataverse database: %s (host), %s (database), %s (username) ******** (password).", self.config['host'], self.config['database'], self.config['username'])
+        self.logger.info("Attempting to connect to Dataverse database: %s (host), %s (database), %s (username) ******** (password).", self.config['host'], self.config['name'], self.config['username'])
 
         try:
             self._connection = psycopg.connect(
