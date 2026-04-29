@@ -192,7 +192,7 @@ def main():
                     else:
                         logger.error("There was an error saving the Excel file.")
 
-            if args.email:
+            if args.send_email:
                 logger.info("Sending email to super admin with the report.")
                 email.email_report_admin(report_file_paths=excel_reports)
 
@@ -240,7 +240,7 @@ def main():
                                                                       worksheet_files=csv_reports)
                     if excel_report_file:
                         logger.info("Finished saving Excel file to %s.", excel_report_file)
-                        if args.email:
+                        if args.send_email:
                             logger.info("Sending email to institutional liaison with the report.")
                             email.email_report_institution(report_file_paths=[excel_report_file],
                                                            account_info=account_info)
@@ -308,7 +308,7 @@ def main():
             else:
                 logger.error("There was an error saving the Excel file.")
 
-        if args.email:
+        if args.send_email:
             logger.info("Sending email to super admin with the report.")
             email.email_report_admin(report_file_paths=excel_reports)
 
