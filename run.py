@@ -94,7 +94,12 @@ def main():
                           'contactEmail', 'contactAffiliation', 'contactRoles']
     files_fieldnames = ['contentSize (MB)']
     sword_fieldnames = ['released']
-    dataverse_fieldnames = root_fieldnames + contact_fieldnames + files_fieldnames + sword_fieldnames
+    dataverse_fieldnames = (
+        root_fieldnames +
+        contact_fieldnames +
+        files_fieldnames +
+        sword_fieldnames
+    )
 
     # Dataset fieldnames for CSV reports
     root_fieldnames = ['dataverse', 'id', 'identifier', 'persistentUrl', 'protocol',
@@ -104,6 +109,7 @@ def main():
     metadata_fieldnames = ['title', 'author', 'datasetContact', 'dsDescription',
                            'notesText', 'subject', 'productionDate', 'productionPlace',
                            'depositor', 'dateOfDeposit']
+    custom_fieldnames = ['downloadCount']
     database_fieldnames = ['fileDownloads']
     files_fieldnames = ['contentSize (MB)', 'totalFiles', 'totalRestrictedFiles']
     dataset_metrics_fieldnames = []
@@ -111,7 +117,15 @@ def main():
         dataset_metrics_fieldnames = ['viewsUnique', 'viewsMonth', 'viewsTotal',
                                       'downloadsUnique', 'downloadsMonth',
                                       'downloadsTotal']
-    dataset_fieldnames = root_fieldnames + latest_fieldnames + metadata_fieldnames + database_fieldnames + files_fieldnames + dataset_metrics_fieldnames
+    dataset_fieldnames = (
+        root_fieldnames +
+        latest_fieldnames +
+        metadata_fieldnames +
+        custom_fieldnames +
+        database_fieldnames +
+        files_fieldnames +
+        dataset_metrics_fieldnames
+    )
 
     # User fieldnames for CSV reports
     user_fieldnames = ['id', 'userIdentifier', 'firstName', 'lastName', 'email',

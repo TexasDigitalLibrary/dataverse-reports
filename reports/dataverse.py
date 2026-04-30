@@ -75,13 +75,13 @@ class DataverseReports:
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
             # Flatten the nested contact information
-            if 'dataverse_contacts' in dataverse:
-                dataverse_contacts = dataverse['dataverse_contacts']
+            if 'dataverseContacts' in dataverse:
+                dataverse_contacts = dataverse['dataverseContacts']
                 if len(dataverse_contacts) > 0:
-                    self.logger.debug("The dataverse_contacts list contains %s contacts.", str(len(dataverse_contacts)))
+                    self.logger.debug("The dataverseContacts list contains %s contacts.", str(len(dataverse_contacts)))
                     dataverse_contact = dataverse_contacts[0]
-                    if 'contact_email' in dataverse_contact:
-                        contact_email = dataverse_contact['contact_email'].strip()
+                    if 'contactEmail' in dataverse_contact:
+                        contact_email = dataverse_contact['contactEmail'].strip()
                         self.logger.debug("Found email of dataverse contact: %s",
                                           str(contact_email))
                         user = self.user_reports.find_user_email(contact_email)
@@ -125,18 +125,20 @@ class DataverseReports:
                 self.logger.warning("Unable to find dataverse contact information.")
 
             # Add the data (file) size of the dataverse and all its sub-dataverses
-            dataverse_size_response = self.dataverse_api.get_dataverse_size(identifier=dataverse_identifier, include_cached=True)
+            dataverse_size_response = self.dataverse_api.get_dataverse_size(
+                identifier=dataverse_identifier, include_cached=True)
             response_size_json = dataverse_size_response.json()
             if response_size_json['status'] == 'OK' and 'data' in response_size_json:
                 dataverse_size = response_size_json['data']
                 if 'message' in dataverse_size:
                     size_message = dataverse_size['message']
-                    self.logger.debug("The message element from storagesize endpoint: %s",  size_message)
+                    self.logger.debug("The message element from storagesize endpoint: %s",
+                                      size_message)
                     size_bytes_match = re.search(self.dataverse_size_pattern, size_message)
                     if size_bytes_match is not None:
                         size_bytes_string = size_bytes_match.group(1)
                         size_bytes = int(size_bytes_string.replace(',',''))
-                        dataverse['contentSize (MB)'] = (size_bytes/1048576)
+                        dataverse['contentSize (MB)'] = size_bytes/1048576
                     else:
                         self.logger.warning("Unable to find the bytes value in the message.")
                 else:
@@ -145,7 +147,8 @@ class DataverseReports:
             # Add the 'dataverseHasBeenReleased' field from the Sword API
             if 'alias' in dataverse:
                 sword_dataverse = self.dataverse_api.sword_get_dataverse(dataverse['alias'])
-                dataverse_has_been_released = sword_dataverse.find('sword:dataverseHasBeenReleased', self.ns)
+                dataverse_has_been_released = sword_dataverse.find(
+                    'sword:dataverseHasBeenReleased', self.ns)
                 if dataverse_has_been_released is not None:
                     if dataverse_has_been_released.text == 'true':
                         self.logger.debug("Element 'dataverseHasBeenReleased' is true.")

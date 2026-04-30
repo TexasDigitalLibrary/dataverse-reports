@@ -43,7 +43,7 @@ class DataverseDatabase(object):
                 count = result[0]
                 return count
         except psycopg.OperationalError as e:
-                self.logger.error("Cannot connect to database. Please check connection information.")
-                self.logger.error("Error: %s, %s", e, type(e))
-        
+            self.logger.error("Cannot connect to database. Please check connection information.")
+            self.logger.error("Error: %s, %s", e, type(e))
+
         return None

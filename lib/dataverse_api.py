@@ -148,6 +148,19 @@ class DataverseApi:
         self.logger.debug("Return status: %s", str(response.status_code))        
         return response
 
+    def get_dataset_download_count(self, identifier=''):
+        """Retrieve dataset download count from API"""
+
+        if identifier is None:
+            self.logger.error("Must specify an identifer.")
+            return None
+
+        url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/downloadCount?includeMDC=true'
+        self.logger.debug("Retrieving dataset download count: %s", url)
+        response = requests.get(url, timeout=self.timeout, headers=self.headers)
+        self.logger.debug("Return status: %s", str(response.status_code))
+        return response
+    
     def get_admin_list_users(self, page=1):
         """"Get list of admin users"""
 

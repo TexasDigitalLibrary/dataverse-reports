@@ -100,7 +100,8 @@ class UserReports:
         self.load_user_dataverse(users, dataverse_identifier)
 
         # Retrieve dvObjects for this dataverse
-        dataverse_contents = self.dataverse_api.get_dataverse_contents(identifier=dataverse_identifier)
+        dataverse_contents = self.dataverse_api.get_dataverse_contents(
+            identifier=dataverse_identifier)
         self.logger.info('Total dvObjects in this dataverse: %s', str(len(dataverse_contents)))
         for dv_object in dataverse_contents:
             if dv_object['type'] == 'dataverse':
@@ -122,13 +123,13 @@ class UserReports:
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
             # Add contact information
-            if 'dataverse_contacts' in dataverse:
-                dataverse_contacts = dataverse['dataverse_contacts']
+            if 'dataverseContacts' in dataverse:
+                dataverse_contacts = dataverse['dataverseContacts']
                 self.logger.debug("The dataverse_contacts list contains %s contacts.",
                                   str(len(dataverse_contacts)))
                 for dataverse_contact in dataverse_contacts:
-                    if 'contact_email' in dataverse_contact:
-                        contact_email = dataverse_contact['contact_email'].strip()
+                    if 'contactEmail' in dataverse_contact:
+                        contact_email = dataverse_contact['contactEmail'].strip()
                         self.logger.debug("Found email of dataverse contact: %s",
                                           str(contact_email))
                         user = self.find_user_email(contact_email)
@@ -136,7 +137,8 @@ class UserReports:
                             self.logger.debug("Adding contact information: %s", user)
                             new_user = user
                         else:
-                            self.logger.warning("Unable to find user from dataverse_contact email: %s",
+                            self.logger.warning(
+                                "Unable to find user from dataverse_contact email: %s",
                                                 str(contact_email))
                     else:
                         self.logger.warning("First dataverse_contact doesn't have an email.")

@@ -136,23 +136,23 @@ class DatasetReports:
                             identifier=dataset_id,
                             option=dataset_metrics_option,
                             doi=dataset_identifier)
-                        
+
                     dataset_metrics_json = dataset_metrics_response.json()
                     if dataset_metrics_json['status'] == 'OK':
                         if dataset_metrics_option == 'viewsMonth':
                             if 'viewsTotal' in dataset_metrics_json['data']:
-                                self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_json['data']['viewsTotal']))
+                                self.logger.info("MDC metric (%s): %s", dataset_metrics_option,  str(dataset_metrics_json['data']['viewsTotal']))
                                 dataset[dataset_metrics_option] = dataset_metrics_json['data']['viewsTotal']
                             else:
                                 self.logger.debug("Unable to find viewsTotal in response.")
                         elif dataset_metrics_option == 'downloadsMonth':
                             if 'downloadsTotal' in dataset_metrics_json['data']:
-                                self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_json['data']['downloadsTotal']))
+                                self.logger.info("MDC metric (%s): %s", dataset_metrics_option, str(dataset_metrics_json['data']['downloadsTotal']))
                                 dataset[dataset_metrics_option] = dataset_metrics_json['data']['downloadsTotal']
                             else:
                                 self.logger.debug("Unable to find downloadsTotal in response.")
                         elif dataset_metrics_option in dataset_metrics_json['data']:
-                            self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_json['data'][dataset_metrics_option]))
+                            self.logger.info("MDC metric (%s): %s", dataset_metrics_option, str(dataset_metrics_json['data'][dataset_metrics_option]))
                             dataset[dataset_metrics_option] = dataset_metrics_json['data'][dataset_metrics_option]
                         else:
                             self.logger.error("Unable to find dataset metric in response.")
@@ -161,10 +161,18 @@ class DatasetReports:
                         self.logger.error(dataset_metrics_json)
                         dataset[dataset_metrics_option] = 0
 
-            # Use dataverse_database to retrieve cumulative download count of file in this dataset
-            download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
-            self.logger.info("Download count for dataset: %s", str(download_count))
-            dataset['fileDownloads'] = download_count
+            # Get download count for this dataset from the API
+            download_count_response = self.dataverse_api.get_dataset_download_count(
+                dataset_id=dataset_id)
+            if download_count_response is not None and 'downloadCount' in download_count_response:
+                download_count = download_count_response['downloadCount']
+                self.logger.info("Download count for dataset: %s", str(download_count))
+                dataset['downloadCount'] = download_count
+
+            # Use dataverse_database to retrieve cumulative download count of files in this dataset
+            file_download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
+            self.logger.info("File download count for dataset: %s", str(file_download_count))
+            dataset['fileDownloads'] = file_download_count
 
             if 'files' in dataset:
                 content_size = 0
