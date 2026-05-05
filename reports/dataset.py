@@ -2,7 +2,7 @@
 
 import logging
 import datetime
-
+import time
 
 class DatasetReports:
     """Class for dataset reports"""
@@ -78,6 +78,7 @@ class DatasetReports:
 
     def add_dataset(self, datasets, dataverse_identifier, dataset_id, dataset_identifier):
         """Add dataset"""
+        time.sleep(5)
 
         # Load dataset
         self.logger.info("Dataset id: %s", dataset_id)
@@ -155,19 +156,23 @@ class DatasetReports:
                             self.logger.info("MDC metric (%s): %s", dataset_metrics_option, str(dataset_metrics_json['data'][dataset_metrics_option]))
                             dataset[dataset_metrics_option] = dataset_metrics_json['data'][dataset_metrics_option]
                         else:
-                            self.logger.error("Unable to find dataset metric in response.")
+                            self.logger.error("Unable to find dataset metric in response: %s",
+                                              dataset_metrics_option)
                     else:
                         self.logger.error("API call was unsuccessful.")
                         self.logger.error(dataset_metrics_json)
                         dataset[dataset_metrics_option] = 0
 
             # Get download count for this dataset from the API
+            self.logger.debug("Retrieving download count for dataset: %s", dataset_identifier)
             download_count_response = self.dataverse_api.get_dataset_download_count(
-                dataset_id=dataset_id)
+                dataset_identifier=dataset_identifier)
             if download_count_response is not None and 'downloadCount' in download_count_response:
                 download_count = download_count_response['downloadCount']
                 self.logger.info("Download count for dataset: %s", str(download_count))
                 dataset['downloadCount'] = download_count
+            else:
+                self.logger.warning("Unable to retrieve download count for dataset: %s", dataset_identifier)
 
             # Use dataverse_database to retrieve cumulative download count of files in this dataset
             file_download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
@@ -203,6 +208,8 @@ class DatasetReports:
             datasets.append(dataset)
         else:
             self.logger.warning('Dataset was empty.')
+
+        self.logger.info("Finished adding dataset: %s", dataset_identifier)
 
     def get_value_recursive(self, values_string, field):
         """Get metadata value recursively"""
