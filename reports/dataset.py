@@ -166,7 +166,7 @@ class DatasetReports:
             # Get download count for this dataset from the API
             self.logger.debug("Retrieving download count for dataset: %s", dataset_identifier)
             download_count_response = self.dataverse_api.get_dataset_download_count(
-                dataset_identifier=dataset_identifier)
+                identifier=dataset_id)
             if download_count_response is not None and 'downloadCount' in download_count_response:
                 download_count = download_count_response['downloadCount']
                 self.logger.info("Download count for dataset: %s", str(download_count))
