@@ -155,7 +155,7 @@ class DataverseApi:
             self.logger.error("Must specify an identifer.")
             return None
 
-        url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/downloadCount?includeMDC=true'
+        url = self.host + 'api/' + self.version + '/datasets/' + str(identifier) + '/download/count?includeMDC=true'
         self.logger.debug("Retrieving dataset download count: %s", url)
         response = requests.get(url, timeout=self.timeout, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))
