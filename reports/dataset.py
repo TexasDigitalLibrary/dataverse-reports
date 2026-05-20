@@ -1,7 +1,11 @@
+"""Class for dataset reports"""
+
 import logging
 import datetime
 
-class DatasetReports(object):
+class DatasetReports:
+    """Class for dataset reports"""
+
     def __init__(self, dataverse_api=None, dataverse_database=None, config=None):
         if dataverse_api is None:
             print('Dataverse API required to create dataset reports.')
@@ -25,16 +29,21 @@ class DatasetReports(object):
         self.logger = logging.getLogger('dataverse-reports')
 
     def report_datasets_recursive(self, dataverse_identifier):
+        """Load all datasets"""
+
         # List of datasets
         datasets = []
 
         self.logger.info("Begin loading datasets for %s.", dataverse_identifier)
         self.load_datasets_recursive(datasets, dataverse_identifier)
-        self.logger.info("Finished loading %s datasets for %s", str(len(datasets)), dataverse_identifier)
+        self.logger.info("Finished loading %s datasets for %s",
+                         str(len(datasets)), dataverse_identifier)
 
         return datasets
 
-    def load_datasets_recursive(self, datasets={}, dataverse_identifier=None):
+    def load_datasets_recursive(self, datasets=None, dataverse_identifier=None):
+        """Load datasets recursively"""
+
         if dataverse_identifier is None:
             self.logger.error("Dataverse identifier is required.")
             return
@@ -49,21 +58,26 @@ class DatasetReports(object):
 
             self.logger.info("Dataverse name: %s", dataverse['name'])
 
-            # Retrieve dvObjects for this dataverse
-            dataverse_contents = self.dataverse_api.get_dataverse_contents(identifier=dataverse_identifier)
-            self.logger.info('Total dvObjects in this dataverse: ' + str(len(dataverse_contents)))
-            for dvObject in dataverse_contents:
-                if dvObject['type'] == 'dataset':
+            # Retrieve dv_objects for this dataverse
+            dataverse_contents = self.dataverse_api.get_dataverse_contents(
+                identifier=dataverse_identifier)
+            self.logger.info('Total dv_objects in this dataverse: %s', str(len(dataverse_contents)))
+            for dv_object in dataverse_contents:
+                if dv_object['type'] == 'dataset':
                     # Add dataset to this dataverse
-                    self.logger.info("Adding dataset %s to dataverse %s.", str(dvObject['id']), str(dataverse_identifier))
-                    self.add_dataset(datasets, dataverse_identifier, dvObject['id'], dvObject['identifier'])
-                if dvObject['type'] == 'dataverse':
-                    self.logger.info("Found new dataverse %s.", str(dvObject['id']))
-                    self.load_datasets_recursive(datasets, dvObject['id'])
+                    self.logger.info("Adding dataset %s to dataverse %s.",
+                                     str(dv_object['id']), str(dataverse_identifier))
+                    self.add_dataset(datasets, dataverse_identifier, dv_object['id'],
+                                     dv_object['identifier'])
+                if dv_object['type'] == 'dataverse':
+                    self.logger.info("Found new dataverse %s.", str(dv_object['id']))
+                    self.load_datasets_recursive(datasets, dv_object['id'])
         else:
-            self.logger.warn("Dataverse was empty.")
+            self.logger.warning('Dataverse was empty.')
 
     def add_dataset(self, datasets, dataverse_identifier, dataset_id, dataset_identifier):
+        """Add dataset"""
+
         # Load dataset
         self.logger.info("Dataset id: %s", dataset_id)
         self.logger.info("Dataset identifier: %s", dataset_identifier)
@@ -86,74 +100,98 @@ class DatasetReports(object):
                     fields = citation['fields']
                     for item in fields:
                         self.logger.debug("Looking at field: %s.", item['typeName'])
-                        valuesString = self.get_value_recursive('', item)
-                        if valuesString.endswith(' ; '):
-                            valuesString = valuesString[:-len(' ; ')]
+                        values_string = self.get_value_recursive('', item)
+                        if values_string.endswith(' ; '):
+                            values_string = values_string[:-len(' ; ')]
 
-                        typeName = item['typeName']
-                        dataset[typeName] = valuesString
+                        type_name = item['typeName']
+                        dataset[type_name] = values_string
 
                 # Remove nested information
                 dataset.pop('latestVersion')
 
-            if (self.config['include_dataset_metrics']):
+            if self.config['include_dataset_metrics']:
                 # Calculate previous month
                 last_month = self.get_last_month()
 
                 # Use Make Data Count endpoints to gather views and downloads statistics
-                dataset_metrics_options = ['viewsUnique', 'viewsMonth', 'viewsTotal', 'downloadsUnique', 'downloadsMonth', 'downloadsTotal']
+                dataset_metrics_options = ['viewsUnique', 'viewsMonth', 'viewsTotal',
+                                           'downloadsUnique', 'downloadsMonth', 'downloadsTotal']
                 for dataset_metrics_option in dataset_metrics_options:
-                    self.logger.debug("Calling endpoint for dataset metric: " + dataset_metrics_option)
+                    self.logger.debug("Calling endpoint for dataset metric: %s",
+                                      dataset_metrics_option)
                     if dataset_metrics_option == 'viewsMonth':
-                        dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option='viewsTotal',doi=dataset_identifier,date=last_month)
+                        dataset_metrics_response = self.dataverse_api.get_dataset_metric(
+                            identifier=dataset_id,
+                            option='viewsTotal',
+                            doi=dataset_identifier,date=last_month)
                     elif dataset_metrics_option == 'downloadsMonth':
-                        dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option='downloadsTotal',doi=dataset_identifier,date=last_month)
+                        dataset_metrics_response = self.dataverse_api.get_dataset_metric(
+                            identifier=dataset_id,
+                            option='downloadsTotal',
+                            doi=dataset_identifier,date=last_month)
                     else:
-                        dataset_metrics_response = self.dataverse_api.get_dataset_metric(identifier=dataset_id,option=dataset_metrics_option,doi=dataset_identifier)
-                        
+                        dataset_metrics_response = self.dataverse_api.get_dataset_metric(
+                            identifier=dataset_id,
+                            option=dataset_metrics_option,
+                            doi=dataset_identifier)
+
                     dataset_metrics_json = dataset_metrics_response.json()
                     if dataset_metrics_json['status'] == 'OK':
                         if dataset_metrics_option == 'viewsMonth':
                             if 'viewsTotal' in dataset_metrics_json['data']:
-                                self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_json['data']['viewsTotal']))
+                                self.logger.info("MDC metric (%s): %s", dataset_metrics_option,  str(dataset_metrics_json['data']['viewsTotal']))
                                 dataset[dataset_metrics_option] = dataset_metrics_json['data']['viewsTotal']
                             else:
                                 self.logger.debug("Unable to find viewsTotal in response.")
                         elif dataset_metrics_option == 'downloadsMonth':
                             if 'downloadsTotal' in dataset_metrics_json['data']:
-                                self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_json['data']['downloadsTotal']))
+                                self.logger.info("MDC metric (%s): %s", dataset_metrics_option, str(dataset_metrics_json['data']['downloadsTotal']))
                                 dataset[dataset_metrics_option] = dataset_metrics_json['data']['downloadsTotal']
                             else:
                                 self.logger.debug("Unable to find downloadsTotal in response.")
                         elif dataset_metrics_option in dataset_metrics_json['data']:
-                            self.logger.info("MDC metric (" + dataset_metrics_option + "): " + str(dataset_metrics_json['data'][dataset_metrics_option]))
+                            self.logger.info("MDC metric (%s): %s", dataset_metrics_option, str(dataset_metrics_json['data'][dataset_metrics_option]))
                             dataset[dataset_metrics_option] = dataset_metrics_json['data'][dataset_metrics_option]
                         else:
-                            self.logger.error("Unable to find dataset metric in response.")
+                            self.logger.error("Unable to find dataset metric in response: %s",
+                                              dataset_metrics_option)
                     else:
                         self.logger.error("API call was unsuccessful.")
                         self.logger.error(dataset_metrics_json)
                         dataset[dataset_metrics_option] = 0
 
-            # Use dataverse_database to retrieve cumulative download count of file in this dataset
-            download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
-            self.logger.info("Download count for dataset: %s", str(download_count))
-            dataset['downloadCount'] = download_count
+            # Get download count for this dataset from the API
+            self.logger.debug("Retrieving download count for dataset: %s", dataset_identifier)
+            download_count_response = self.dataverse_api.get_dataset_download_count(
+                identifier=dataset_id)
+            if download_count_response is not None and 'downloadCount' in download_count_response:
+                download_count = download_count_response['downloadCount']
+                self.logger.info("Download count for dataset: %s", str(download_count))
+                dataset['downloadCount'] = download_count
+            else:
+                self.logger.warning("Unable to retrieve download count for dataset: %s", dataset_identifier)
+
+            # Use dataverse_database to retrieve cumulative download count of files in this dataset
+            file_download_count = self.dataverse_database.get_download_count(dataset_id=dataset_id)
+            self.logger.info("File download count for dataset: %s", str(file_download_count))
+            dataset['fileDownloads'] = file_download_count
 
             if 'files' in dataset:
-                contentSize = 0
+                content_size = 0
                 count_restricted = 0
                 files = dataset['files']
                 for file in files:
                     if 'dataFile' in file:
                         if file['restricted']:
                             count_restricted += 1
-                        dataFile = file['dataFile']
-                        filesize = int(dataFile['filesize'])
-                        contentSize += filesize
-                self.logger.info('Totel size (bytes) of all files in this dataset: %s', str(contentSize))
+                        data_file = file['dataFile']
+                        filesize = int(data_file['filesize'])
+                        content_size += filesize
+                self.logger.info('Totel size (bytes) of all files in this dataset: %s',
+                                 str(content_size))
                 # Convert to megabytes for reports
-                dataset['contentSize (MB)'] = (contentSize/1048576)
+                dataset['contentSize (MB)'] = content_size/1048576
 
                 dataset['totalFiles'] = len(files)
                 dataset['totalRestrictedFiles'] = count_restricted
@@ -167,115 +205,123 @@ class DatasetReports(object):
             dataset['dataverse'] = dataverse['alias']
             datasets.append(dataset)
         else:
-            self.logger.warn("Dataset was empty.")
+            self.logger.warning('Dataset was empty.')
 
-    def get_value_recursive(self, valuesString, field):
+        self.logger.info("Finished adding dataset: %s", dataset_identifier)
+
+    def get_value_recursive(self, values_string, field):
+        """Get metadata value recursively"""
+
         if not field['multiple']:
             if field['typeClass'] == 'primitive':
-                valuesString += field['value']
-                self.logger.debug("New value of valuesString: %s", str(valuesString))
-                return valuesString
+                values_string += field['value']
+                self.logger.debug("New value of values_string: %s", str(values_string))
+                return values_string
             elif field['typeClass'] == 'controlledVocabulary':
-                subValue = ''
+                sub_value = ''
                 for value in field['value']:
-                    subValue += value + ', '
-                subValue = subValue[:-2]
-                valuesString += subValue
-                self.logger.debug("New value of valuesString: %s", str(valuesString))
-                return valuesString
+                    sub_value += value + ', '
+                sub_value = sub_value[:-2]
+                values_string += sub_value
+                self.logger.debug("New value of values_string: %s", str(values_string))
+                return values_string
             elif field['typeClass'] == 'compound':
                 self.logger.debug("Looking at single compound field...")
-                subValue = ''
+                sub_value = ''
                 if isinstance(field['value'], list):
                     for value in field['value']:
-                        compoundValue = self.create_compound_value(value)
-                        if compoundValue.endswith(' - '):
-                            compoundValue = compoundValue[:-len(' - ')]
-                        self.logger.debug("New compoundValue: %s", compoundValue)
-                    
-                        valuesString += compoundValue + " ; "
+                        compound_value = self.create_compound_value(value)
+                        if compound_value.endswith(' - '):
+                            compound_value = compound_value[:-len(' - ')]
+                        self.logger.debug("New compound_value: %s", compound_value)
+
+                        values_string += compound_value + " ; "
                 else:
                     self.logger.debug("Compound field has single value")
                     value = field['value']
 
-                    compoundValue = self.create_compound_value(value)
-                    if compoundValue.endswith(' - '):
-                        compoundValue = compoundValue[:-len(' - ')]
-                    self.logger.debug("New compoundValue: %s", compoundValue)
-                    
-                    valuesString += compoundValue + " ; "
+                    compound_value = self.create_compound_value(value)
+                    if compound_value.endswith(' - '):
+                        compound_value = compound_value[:-len(' - ')]
+                    self.logger.debug("New compound_value: %s", compound_value)
 
-                if valuesString.endswith(' ; '):
-                    valuesString = valuesString[:-len(' ; ')]
-                self.logger.debug("New value of valuesString: %s", str(valuesString))
-                return valuesString
+                    values_string += compound_value + " ; "
+
+                if values_string.endswith(' ; '):
+                    values_string = values_string[:-len(' ; ')]
+                self.logger.debug("New value of values_string: %s", str(values_string))
+                return values_string
             else:
                 self.logger.debug("Unrecognized typeClass: %s", field['typeClass'])
         else:
             if field['typeClass'] == 'primitive':
-                subValue = ''
+                sub_value = ''
                 for value in field['value']:
-                    subValue += value + ', '
-                subValue = subValue[:-2]
-                valuesString += subValue
-                self.logger.debug("New value of valuesString: %s", str(valuesString))
-                return valuesString
+                    sub_value += value + ', '
+                sub_value = sub_value[:-2]
+                values_string += sub_value
+                self.logger.debug("New value of values_string: %s", str(values_string))
+                return values_string
             elif field['typeClass'] == 'controlledVocabulary':
-                subValue = ''
+                sub_value = ''
                 for value in field['value']:
-                    subValue += value + ', '
-                subValue = subValue[:-2]
-                valuesString += subValue
-                self.logger.debug("New value of valuesString: %s", str(valuesString))
-                return valuesString
+                    sub_value += value + ', '
+                sub_value = sub_value[:-2]
+                values_string += sub_value
+                self.logger.debug("New value of values_string: %s", str(values_string))
+                return values_string
             elif field['typeClass'] == 'compound':
                 self.logger.debug("Looking at multiple compound field...")
-                compoundValue = ''
+                compound_value = ''
                 if isinstance(field['value'], list):
                     for value in field['value']:
-                        compoundValue = self.create_compound_value(value)
-                        if compoundValue.endswith(' - '):
-                            compoundValue = compoundValue[:-len(' - ')]
-                        self.logger.debug("New compoundValue: %s", compoundValue)
-                    
-                        valuesString += compoundValue + " ; "
+                        compound_value = self.create_compound_value(value)
+                        if compound_value.endswith(' - '):
+                            compound_value = compound_value[:-len(' - ')]
+                        self.logger.debug("New compound_value: %s", compound_value)
+
+                        values_string += compound_value + " ; "
                 else:
                     self.logger.debug("Compound field has single value")
                     value = field['value']
 
-                    compoundValue = self.create_compound_value(value)
-                    if compoundValue.endswith(' - '):
-                        compoundValue = compoundValue[:-len(' - ')]
-                    self.logger.debug("New compoundValue: %s", compoundValue)
-                    
-                    valuesString += compoundValue + " ; "
+                    compound_value = self.create_compound_value(value)
+                    if compound_value.endswith(' - '):
+                        compound_value = compound_value[:-len(' - ')]
+                    self.logger.debug("New compound_value: %s", compound_value)
 
-                if valuesString.endswith(' ; '):
-                    valuesString = valuesString[:-len(' ; ')]
-                self.logger.debug("New value of valuesString: %s", str(valuesString))
-                return valuesString
+                    values_string += compound_value + " ; "
+
+                if values_string.endswith(' ; '):
+                    values_string = values_string[:-len(' ; ')]
+                self.logger.debug("New value of values_string: %s", str(values_string))
+                return values_string
             else:
                 self.logger.debug("Unrecognized typeClass: %s", field['typeClass'])
 
     def create_compound_value(self, fields):
+        """Create compound value"""
+
         self.logger.debug("Creating compound string...")
 
-        compoundValue = ''
+        compound_value = ''
         for key, elements in fields.items():
             if isinstance(elements['value'], str):
-                compoundValue += elements['value'] + " - "
+                compound_value += elements['value'] + " - "
             else:
                 self.logger.error("Compound object contains field with mulitple values.")
 
-            self.logger.info("New compound value: %s", compoundValue)
+            self.logger.info("New compound value: %s", compound_value)
 
-        if compoundValue.endswith(' - '):
-            compoundValue = compoundValue[:-len(' - ')]
+        if compound_value.endswith(' - '):
+            compound_value = compound_value[:-len(' - ')]
 
-        self.logger.debug("Final compound string: " + compoundValue)
-        return compoundValue
+        self.logger.debug("Final compound string: %s", compound_value)
+        return compound_value
 
     def get_last_month(self):
+        """Get last month"""
+
         now = datetime.datetime.now()
         previous = now.date().replace(day=1) - datetime.timedelta(days=1)
         last_month = previous.strftime("%Y-%m")

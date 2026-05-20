@@ -1,21 +1,18 @@
 # dataverse-reports
 
-A python3-based tool to generate and email statistical reports from [Dataverse](https://dataverse.org/) using the native API and database queries.
-
-As with [Miniverse](https://github.com/IQSS/miniverse), the reports require access to the Dataverse database.
+A Python tool to generate and email statistical reports from [Dataverse](https://dataverse.org/) using the native API and database queries.
 
 ## Requirements
 
-- Python 3.6+
+- Python 3.12+
 - Dataverse 5.1+
 
-## Python 3 Virtual Environment Setup
+## Python Virtual Environment Setup
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-pip install pipenv
-pipenv install
+pip install -r requirements.txt
 ```
 
 ## Configuration
