@@ -2,7 +2,6 @@
 
 import logging
 import datetime
-import time
 
 class DatasetReports:
     """Class for dataset reports"""
@@ -78,7 +77,6 @@ class DatasetReports:
 
     def add_dataset(self, datasets, dataverse_identifier, dataset_id, dataset_identifier):
         """Add dataset"""
-        time.sleep(5)
 
         # Load dataset
         self.logger.info("Dataset id: %s", dataset_id)
