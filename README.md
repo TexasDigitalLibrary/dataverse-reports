@@ -24,25 +24,32 @@ cp config/application.yml.sample config/application.yml
 ### Example
 
 ```yaml
-dataverse_api_host: ''
-dataverse_api_key: ''
-dataverse_db_host: ''
-dataverse_db_username: ''
-dataverse_db_password: ''
+dataverse_name: 'My data repository'
+api:
+     host: 'http://localhost:8080'
+     token: 'sample_key'
+     timeout: 60
+database:
+     host: 'localhost'
+     port: 5432
+     name: 'dataverse'
+     username: 'db_user'
+     password: 'db_password'
+smtp:
+     host: 'localhost'
+     auth: ''
+     port: 25
+     username: 'username'
+     password: 'password'
+include_dataset_metrics: false
 work_dir: '/tmp'
 log_path: 'logs'
 log_file: 'dataverse-reports.log'
 log_level: 'INFO'
-smtp_host: 'localhost'
-smtp_auth: ''
-smtp_port: 25
-smtp_username: 'username'
-smtp_password: 'password'
 from_email: ''
 admin_emails:
         - email1
         - email2
-from_email: ''
 accounts:
      account1:
           name: Account 1
