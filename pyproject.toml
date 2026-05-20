@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dataverse-reports"
-version = "1.5.0"
+version = "2.0.0"
 description = "Generate and email statistical reports for content stored in Dataverse - https://dataverse.org/."
 authors = ["nwoodward <woodward.nicholas@gmail.com>"]
 license = "GPLv3"
