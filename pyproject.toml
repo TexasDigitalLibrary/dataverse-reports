@@ -3,7 +3,7 @@ name = "dataverse-reports"
 version = "2.0.0"
 description = "Generate and email statistical reports for content stored in Dataverse - https://dataverse.org/."
 authors = ["nwoodward <woodward.nicholas@gmail.com>"]
-license = "GPLv3"
+license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
