@@ -2,6 +2,7 @@
 
 from xml.etree import ElementTree
 import logging
+
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -160,7 +161,7 @@ class DataverseApi:
         response = requests.get(url, timeout=self.timeout, headers=self.headers)
         self.logger.debug("Return status: %s", str(response.status_code))
         return response
-    
+
     def get_admin_list_users(self, page=1):
         """"Get list of admin users"""
 
