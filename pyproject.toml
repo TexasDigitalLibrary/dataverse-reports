@@ -2,7 +2,7 @@
 name = "dataverse-reports"
 version = "2.0.0"
 description = "Generate and email statistical reports for content stored in Dataverse - https://dataverse.org/."
-authors = ["nwoodward <woodward.nicholas@gmail.com>"]
+authors = ["Nicholas Woodward <woodward.nicholas@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
