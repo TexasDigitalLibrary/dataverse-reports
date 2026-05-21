@@ -5,7 +5,7 @@ A Python tool to generate and email statistical reports from [Dataverse](https:/
 ## Requirements
 
 - Python 3.12+
-- Dataverse 5.1+
+- Dataverse 6.1+
 
 ## Python Virtual Environment Setup
 
